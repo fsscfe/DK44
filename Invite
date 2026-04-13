@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aviator VIP - Ultimate Experience</title>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --panel-bg: #1b1c1d;
+            --aviator-red: #d21d1d;
+            --btn-green: #28a745;
+            --btn-orange: #ff9800;
+            --cashout-yellow: #fff59d;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            background-color: #0b0b0b;
+            color: white;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 430px;
+            background: var(--bg-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #222;
+            border-right: 1px solid #222;
+        }
+
+        header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: #141516; z-index: 110; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .close-btn { color: #888; font-size: 22px; cursor: pointer; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .close-btn:active { transform: scale(0.8); color: white; }
+        .logo { color: var(--aviator-red); font-weight: 900; font-size: 22px; font-style: italic; }
+        .balance-box { color: #28a745; font-weight: bold; background: #000; padding: 5px 12px; border-radius: 20px; border: 1px solid #333; }
+
+        .history-strip {
+            display: flex; gap: 8px; padding: 8px; background: #050505; 
+            overflow-x: auto; scrollbar-width: none; min-height: 40px; border-bottom: 1px solid #111;
+        }
+        .h-item { font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 10px; background: #1a1a1a; flex-shrink: 0; color: #3498db; }
+        .h-purple { color: #9b59b6; }
+        .h-pink { color: #e91e63; }
+        .h-red { color: #e74c3c; }
+
+        .display-area {
+            height: 280px; margin: 0 10px; position: relative; background: #000;
+            border-radius: 15px; overflow: hidden; border: 1px solid #1a1a1a; margin-top: 5px;
+        }
+        #gameCanvas { width: 100%; height: 100%; display: block; }
+        
+        #win-msg {
+            display: none;
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9); color: var(--cashout-yellow);
+            padding: 8px 15px; border-radius: 10px; border: 1.5px solid var(--cashout-yellow);
+            font-weight: 900; font-size: 15px; z-index: 70; text-align: center;
+            white-space: nowrap;
+        }
+
+        #bar-container {
+            display: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; z-index: 55;
+        }
+        #bar-fill { width: 0%; height: 100%; background: var(--aviator-red); transition: width 0.1s linear; }
+
+        .multiplier-text { 
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); 
+            font-size: 65px; font-weight: 900; z-index: 50; display: none; 
+            color: #ffffff; 
+            transition: text-shadow 0.2s;
+        }
+
+        #flew-away-msg {
+            display: none; position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+            color: var(--aviator-red); font-size: 24px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 2px; z-index: 55;
+        }
+
+        .countdown-overlay { position: absolute; bottom: 25px; width: 100%; text-align: center; color: #777; font-weight: bold; font-size: 12px; z-index: 60; }
+
+        .bet-grid { 
+            padding: 10px 8px; display: grid; gap: 10px; position: sticky; 
+            top: 0; background: var(--bg-black); z-index: 100;
+        }
+        .bet-card { background: var(--panel-bg); border-radius: 15px; padding: 10px; border: 1px solid #2a2a2a; }
+        .main-ctrls { display: flex; gap: 8px; height: 85px; }
+        .input-stack { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .locked { pointer-events: none; opacity: 0.5; }
+
+        .stepper { background: #000; border: 1px solid #333; border-radius: 20px; display: flex; justify-content: space-between; padding: 2px 8px; }
+        .stepper button { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; width: 25px; }
+        .stepper input { background: none; border: none; color: white; width: 100%; text-align: center; font-weight: bold; font-size: 15px; }
+
+        .quick-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .quick-btns button { background: #2c2d2e; border: none; color: #fff; border-radius: 6px; font-size: 10px; font-weight: bold; padding: 4px 0; }
+
+        .bet-btn {
+            flex: 1.3; background: var(--btn-green); border: none; border-radius: 15px; color: white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
+            transition: 0.1s;
+        }
+        .bet-btn span.l { font-size: 12px; text-transform: uppercase; }
+        .bet-btn span.v { font-size: 16px; font-weight: 900; }
+        
+        .bet-btn.cashout { background: var(--btn-orange); }
+        .bet-btn.cancel, .bet-btn.queued { background: #d21d1d; }
+        .bet-btn.cashed-out-final { background: rgba(0, 0, 0, 0.8) !important; border: 2px solid var(--cashout-yellow); }
+        .bet-btn.cashed-out-final span.v { color: var(--cashout-yellow); }
+
+        .bet-btn.processing-cashout {
+            background: #b06500 !important; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+            pointer-events: none; opacity: 0.9;
+        }
+
+        .live-bets-container { background: #141516; margin-top: 5px; border-radius: 20px 20px 0 0; }
+        .list-header { padding: 12px 15px; font-size: 11px; color: #555; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; }
+        .user-list { padding: 10px 15px; min-height: 600px; }
+        .user-row { display: flex; justify-content: space-between; padding: 8px 10px; margin-bottom: 6px; border: 1px solid rgba(255, 245, 157, 0.15); border-radius: 8px; font-size: 12px; color: #ccc; align-items: center; }
+        .u-res { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body onclick="window.unlockAudio()">
+
+<div class="app-container">
+    <header>
+        <div class="header-left">
+            <a class="close-btn" href="home.html">✖</a>
+            <div class="logo">Aviator VIP</div>
+        </div>
+        <div class="balance-box" id="balance-el">0.00 PKR</div>
+    </header>
+
+    <div class="history-strip" id="history-el"></div>
+
+    <div class="display-area" id="disp-area">
+        <div id="win-msg">You Won 0.00 PKR!</div>
+        <div id="bar-container"><div id="bar-fill"></div></div>
+        <div id="flew-away-msg">Flew Away!</div>
+        <div class="multiplier-text" id="mult-el">1.00x</div>
+        <div class="countdown-overlay" id="timer-box">WAITING FOR NEXT ROUND <span id="timer-val">8.0</span>s</div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div class="bet-grid">
+        <div class="bet-card">
+            <div class="main-ctrls">
+                <div class="input-stack" id="lock-1">
+                    <div class="stepper"><button onclick="window.adjust(1, -1)">−</button><input type="number" id="val-1" value="16.00"><button onclick="window.adjust(1, 1)">+</button></div>
+                    <div class="quick-btns"><button onclick="window.quick(1, 16)">16</button><button onclick="window.quick(1, 32)">32</button><button onclick="window.quick(1, 64)">64</button><button onclick="window.quick(1, 160)">160</button></div>
+                </div>
+                <button class="bet-btn" id="btn-1" onclick="window.handleBet(1)"><span class="l">Bet</span><span class="v" id="btn-txt-1">16.00 PKR</span></button>
+            </div>
+        </div>
+        <div class="bet-card">
+            <div class="main-ctrls">
+                <div class="input-stack" id="lock-2">
+                    <div class="stepper"><button onclick="window.adjust(2, -1)">−</button><input type="number" id="val-2" value="16.00"><button onclick="window.adjust(2, 1)">+</button></div>
+                    <div class="quick-btns"><button onclick="window.quick(2, 16)">16</button><button onclick="window.quick(2, 32)">32</button><button onclick="window.quick(2, 64)">64</button><button onclick="window.quick(2, 160)">160</button></div>
+                </div>
+                <button class="bet-btn" id="btn-2" onclick="window.handleBet(2)"><span class="l">Bet</span><span class="v" id="btn-txt-2">16.00 PKR</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="live-bets-container">
+        <div class="list-header"><span>USER</span><span>BET</span><span>CASH OUT</span></div>
+        <div class="user-list" id="bot-list"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update, push, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260",
+        authDomain: "eagle-trading-81262.firebaseapp.com",
+        databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com",
+        projectId: "eagle-trading-81262",
+        storageBucket: "eagle-trading-81262.firebasestorage.app",
+        messagingSenderId: "996540768145",
+        appId: "1:996540768145:web:76304ad1ffe78d45780430"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let userPhone = localStorage.getItem('userPhone') || '03001234567'; 
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const multEl = document.getElementById('mult-el');
+    const balanceEl = document.getElementById('balance-el');
+    const botListEl = document.getElementById('bot-list');
+    const winMsgEl = document.getElementById('win-msg');
+    const barFill = document.getElementById('bar-fill');
+    const flewAwayMsg = document.getElementById('flew-away-msg');
+
+    const planeImg = new Image(); planeImg.src = 'avaiter.plane.png'; 
+    const fanImg = new Image(); fanImg.src = 'fan.png';
+
+    const sBg = new Audio('avaiter.background.mp3'); sBg.loop = true; sBg.volume = 0.4;
+    const sFly = new Audio('fly.aviator.mp3');
+    const sCrash = new Audio('crash.aviator.mp3');
+    const sCashout = new Audio('cashout.aviator.mp3');
+    const sTouch = new Audio('touch.aviator.mp3');
+
+    let balance = 0, audioUnlocked = false;
+    let multiplier = 1.00, gameState = 'WAITING', crashPoint = 1.00;
+    let shineAngle = 0, planeX = 40, planeY = 0;
+    let currentShineColor = "rgba(255, 255, 255, 0.03)"; 
+
+    let botData = [];
+    let bets = { 1: { active: false, cashed: false, amount: 16, queued: false }, 2: { active: false, cashed: false, amount: 16, queued: false } };
+    let cashingOut = { 1: false, 2: false };
+    
+    let ignoreDbBalance = false;
+    let adminEmergencyCrash = false;
+    let adminNextCrash = 0;
+    let adminSequence = [];
+    
+    // Server Sync Variables
+    let flightStartTime = Date.now();
+    let isGameRunning = false;
+
+    function processWagerLogic(betAmount, currentMult, isWin) {
+        if (betAmount <= 0) return;
+        const userRef = ref(db, `users/${userPhone}`);
+        get(userRef).then(snap => {
+            if(snap.exists()) {
+                let d = snap.val();
+                let currentTotalBet = parseFloat(d.totalBet || 0); 
+                let currentWager = parseFloat(d.wager || 0);       
+                let newTotalBet = currentTotalBet + betAmount;
+                let wagerDecrease = 0;
+                
+                if (isWin) {
+                    if (currentMult >= 2.00) wagerDecrease = betAmount; 
+                    else wagerDecrease = (betAmount * currentMult - betAmount) * 0.5; 
+                }
+                
+                let newWager = Math.max(0, currentWager - wagerDecrease);
+                update(userRef, { totalBet: newTotalBet, wager: newWager }).catch(()=>{});
+            }
+        }).catch(()=>{});
+    }
+
+    async function updateBalanceInDB(newBal) {
+        ignoreDbBalance = true;
+        balance = parseFloat(newBal.toFixed(2));
+        balanceEl.innerText = balance.toLocaleString() + " PKR";
+        try {
+            if(userPhone !== "03001234567") {
+                await update(ref(db, `users/${userPhone}`), { balance: balance });
+            }
+        } catch(e) {}
+        setTimeout(() => { ignoreDbBalance = false; }, 2000);
+    }
+
+    onValue(ref(db, `users/${userPhone}`), s => {
+        if (!ignoreDbBalance) {
+            const d = s.val();
+            if (d) {
+                balance = parseFloat(d.balance || 0); 
+                balanceEl.innerText = balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " PKR";
+            }
+        }
+    });
+
+    onValue(ref(db, 'admin_settings/aviator_control'), snap => {
+        if(snap.exists()) {
+            let data = snap.val();
+            adminEmergencyCrash = data.emergencyCrash || false;
+            adminNextCrash = parseFloat(data.nextCrash) || 0;
+            let rawSeq = data.crashSequence;
+            if (rawSeq) adminSequence = Array.isArray(rawSeq) ? rawSeq.map(n => parseFloat(n)) : Object.keys(rawSeq).sort((a, b) => parseInt(a) - parseInt(b)).map(k => parseFloat(rawSeq[k]));
+            else adminSequence = [];
+            adminSequence = adminSequence.filter(n => !isNaN(n) && n > 1.00);
+
+            if(gameState === 'FLYING' && adminEmergencyCrash) {
+                if(crashPoint > multiplier) crashPoint = multiplier; 
+            }
+        }
+    });
+
+    onValue(ref(db, 'game_sync/global_history'), snap => {
+        let hist = snap.val();
+        if(hist) {
+            if (!Array.isArray(hist)) hist = Object.values(hist);
+            const el = document.getElementById('history-el'); 
+            el.innerHTML = "";
+            hist.slice(-15).forEach(v => addHistoryUI(v));
+        }
+    });
+
+    // --- SMART RESUME (JOIN IN PROGRESS) ---
+    get(ref(db, 'game_sync/live_status')).then(snap => {
+        if(snap.exists() && !isGameRunning) {
+            let data = snap.val();
+            if(data.state === 'FLYING' && data.startTime) {
+                let elapsedMs = Date.now() - data.startTime;
+                if(elapsedMs > 0 && elapsedMs < 60000) {
+                    flightStartTime = Date.now() - elapsedMs; 
+                }
+            }
+        }
+    });
+
+    function addHistoryUI(v) {
+        let num = parseFloat(v);
+        if (isNaN(num)) return; 
+        let s = document.createElement('span'); 
+        let c = "h-blue"; 
+        if (num >= 10) c = "h-pink"; else if (num >= 2) c = "h-purple"; 
+        s.className = `h-item ${c}`; 
+        s.innerText = num.toFixed(2) + "x"; 
+        document.getElementById('history-el').prepend(s); 
+    }
+
+    function resize() { 
+        let dispArea = document.getElementById('disp-area');
+        canvas.width = dispArea.clientWidth || 400; 
+        canvas.height = dispArea.clientHeight || 280; 
+    }
+    window.addEventListener('resize', resize);
+    window.addEventListener('load', resize);
+    setTimeout(resize, 100); 
+
+    window.unlockAudio = () => { 
+        if(!audioUnlocked) { 
+            sBg.play().catch(()=>{}); 
+            [sFly, sCrash, sCashout, sTouch].forEach(s => { s.play().then(()=>s.pause()).catch(()=>{}) }); 
+            audioUnlocked = true; 
+        } 
+    };
+
+    gameLifecycle();
+
+    async function gameLifecycle() {
+        isGameRunning = true;
+        while (true) {
+            try {
+                gameState = 'WAITING';
+                multiplier = 1.00;
+                multEl.style.display = 'none'; 
+                flewAwayMsg.style.display = 'none';
+                multEl.style.color = '#ffffff'; 
+                multEl.style.textShadow = 'none';
+                currentShineColor = "rgba(255, 255, 255, 0.03)";
+                
+                document.getElementById('bar-container').style.display = 'block';
+                document.getElementById('timer-box').style.display = 'block';
+                
+                for(let i=1; i<=2; i++) { 
+                    if(bets[i].queued) { bets[i].queued = false; bets[i].active = true; }
+                    cashingOut[i] = false;
+                }
+                
+                botListEl.innerHTML = ""; botData = [];
+
+                let cd = 8.0; 
+                let targetBots = 30 + Math.floor(Math.random() * 11);
+                let botInterval = setInterval(() => { if(botData.length < targetBots) addMaskedBot(); }, 250);
+
+                while (cd > 0) {
+                    document.getElementById('timer-val').innerText = cd.toFixed(1);
+                    barFill.style.width = ((8.0 - cd) / 8.0 * 100) + "%";
+                    updateBtns(); 
+                    await sleep(100); cd -= 0.1;
+                    drawWaiting();
+                }
+                clearInterval(botInterval);
+
+                gameState = 'FLYING';
+                flightStartTime = Date.now();
+                
+                multEl.style.display = 'block'; 
+                document.getElementById('bar-container').style.display = 'none';
+                document.getElementById('timer-box').style.display = 'none';
+
+                sFly.currentTime = 0; sFly.play().catch(()=>{});
+                setTimeout(() => { sFly.pause(); }, 2000);
+
+                if (adminEmergencyCrash) { crashPoint = 1.04; adminEmergencyCrash = false; set(ref(db, 'admin_settings/aviator_control/emergencyCrash'), false).catch(e=>{});} 
+                else if (adminNextCrash > 1.00) { crashPoint = adminNextCrash; adminNextCrash = 0; set(ref(db, 'admin_settings/aviator_control/nextCrash'), 0).catch(e=>{}); } 
+                else if (adminSequence && adminSequence.length > 0) { crashPoint = adminSequence[0]; adminSequence.shift(); set(ref(db, 'admin_settings/aviator_control/crashSequence'), adminSequence).catch(e=>{});} 
+                else { 
+                    let rand = Math.random();
+                    if (rand < 0.05) crashPoint = 1.00 + (Math.random() * 0.10);
+                    else { crashPoint = 1.00 / (1.00 - Math.random() * 0.99); if (crashPoint > 200) crashPoint = 100 + (Math.random() * 100); }
+                }
+
+                crashPoint = parseFloat(crashPoint);
+                if (isNaN(crashPoint) || crashPoint < 1.01) crashPoint = 1.10 + (Math.random() * 0.50); 
+
+                set(ref(db, 'game_sync/live_status'), { state: 'FLYING', startTime: flightStartTime, x: "1.00" }).catch(()=>{});
+
+                updateBtns();
+                await flightLoop();
+
+                gameState = 'CRASHED';
+                sCrash.play().catch(()=>{});
+                multEl.style.color = "#ff0000"; 
+                multEl.style.textShadow = "none";
+                flewAwayMsg.style.display = 'block'; 
+                currentShineColor = "rgba(231, 76, 60, 0.08)"; 
+
+                set(ref(db, 'game_sync/live_status'), { state: 'CRASHED', x: multiplier.toFixed(2) }).catch(()=>{});
+                
+                for(let i=1; i<=2; i++) {
+                    if (bets[i].active && !bets[i].cashed) processWagerLogic(bets[i].amount, 0, false);
+                }
+
+                get(ref(db, 'game_sync/global_history')).then(histSnap => {
+                    let currentHist = histSnap.val() ||
