@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DK44 Admin - Advanced Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body {
+            background: linear-gradient(rgba(0, 41, 31, 0.95), rgba(0, 41, 31, 0.95)), url('Rgbg.png'); 
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: white; min-height: 100vh; padding: 15px;
+            touch-action: pan-x pan-y;
+        }
+
+        .admin-container { width: 100%; max-width: 500px; margin: 0 auto; }
+
+        /* Header */
+        .header { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px; padding-top: 10px; }
+        .header h1 { color: #FFD700; font-size: 28px; font-weight: 900; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .back-btn { position: absolute; right: 0; color: #FFD700; font-size: 24px; text-decoration: none; transition: 0.3s; }
+        .back-btn:hover { color: white; transform: scale(1.1); }
+
+        /* Stats Section (From Old Design) */
+        .stats-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .stat-card { flex: 1; background: #001F18; border: 1px solid #004D40; padding: 10px 5px; border-radius: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .stat-card h4 { font-size: 10px; color: #aaa; margin-bottom: 3px; }
+        .stat-card span { font-size: 18px; font-weight: bold; color: #FFD700; }
+
+        /* Search Box */
+        .search-container { margin-bottom: 15px; position: relative; }
+        .search-input { width: 100%; padding: 12px 40px 12px 15px; border-radius: 25px; border: 1px solid #004D40; background: #001F18; color: white; outline: none; font-size: 15px; text-align: right; }
+        .search-icon { position: absolute; right: 15px; top: 12px; color: #FFD700; }
+
+        /* Filter Tabs (From Old Design) */
+        .tabs-container { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px 5px; border-radius: 8px; border: 1px solid #004D40; background: #001F18; color: #ccc; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s; }
+        .tab-btn.active { background: #FFD700; color: #000; border-color: #FFD700; }
+
+        /* User List */
+        #user-list-container { margin-top: 10px; }
+        .user-item { background: #001F18; border: 1px solid #004D40; margin-bottom: 10px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        .user-summary { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to right, #001F18, #00332a); }
+        .user-summary .phone { font-weight: bold; font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .user-summary .arrow { color: #FFD700; font-size: 11px; background: rgba(255,215,0,0.1); padding: 4px 8px; border-radius: 15px; }
+        
+        /* Top Player Badge */
+        .top-badge { background: linear-gradient(45deg, #ff0000, #ff7300); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Detailed Grid inside Card */
+        .user-details { padding: 15px; background: #00120f; border-top: 1px solid #004D40; display: none; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #001F18; padding: 10px; border-radius: 8px; border: 1px dashed #004D40; }
+        .stat-box.highlight { border-color: #FFD700; background: rgba(255,215,0,0.05); }
+        .s-title { font-size: 11px; color: #26C6DA; margin-bottom: 4px; }
+        .s-val { font-size: 14px; font-weight: bold; color: #fff; }
+        .s-val.gold { color: #FFD700; }
+        .s-val.red { color: #ff4d4d; }
+        .s-val.green { color: #00ff88; }
+
+        /* Edit Section */
+        .edit-section { background: #002b24; padding: 15px; border-radius: 8px; border-right: 3px solid #FFD700; }
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 12px; color: #ddd; margin-bottom: 5px; }
+        .input-group input, .input-group select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #004D40; background: #00120f; color: white; font-size: 14px; }
+        .input-group input:focus, .input-group select:focus { border-color: #FFD700; outline: none; }
+
+        .save-btn { width: 100%; background: linear-gradient(135deg, #FFD700, #DAA520); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 5px; transition: 0.2s; }
+        .save-btn:active { transform: scale(0.98); }
+        
+        .loading { text-align: center; color: #FFD700; margin-top: 40px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="header">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h1>DK44 ایڈمن</h1>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="search-box" placeholder="یوزر کا نمبر تلاش کریں..." oninput="filterData()">
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="setFilter('all', this)">تمام</button>
+            <button class="tab-btn" onclick="setFilter('today', this)">آج</button>
+            <button class="tab-btn" onclick="setFilter('yesterday', this)">کل</button>
+            <button class="tab-btn" onclick="setFilter('7days', this)">7 دن</button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card"><h4>کل ممبرز</h4><span id="stat-total">0</span></div>
+            <div class="stat-card"><h4>آج نئے</h4><span id="stat-today">0</span></div>
+            <div class="stat-card"><h4>فلٹر شدہ</h4><span id="stat-filtered">0</span></div>
+        </div>
+
+        <!-- User List Area -->
+        <div id="user-list-container">
+            <p class="loading"><i class="fas fa-spinner fa-spin"></i> ڈیٹا لوڈ ہو رہا ہے...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260",
+            authDomain: "eagle-trading-81262.firebaseapp.com",
+            databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com",
+            projectId: "eagle-trading-81262",
+            storageBucket: "eagle-trading-81262.firebasestorage.app",
+            messagingSenderId: "996540768145",
+            appId: "1:996540768145:web:76304ad1ffe78d45780430"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let allUsers = [];
+        let currentFilter = 'all';
+
+        // Load Data Safely
+        onValue(ref(db, 'users'), (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                document.getElementById('user-list-container').innerHTML = "<p style='text-align:center'>کوئی ڈیٹا نہیں ملا۔</p>";
+                return;
+            }
+            
+            // Extract and Format users safely to avoid crashing
+            allUsers = Object.entries(data).map(([key, value]) => {
+                return {
+                    id: key,
+                    mobile: value.mobile || value.phone || key,
+                    password: value.password || "N/A",
+                    balance: parseFloat(value.balance) || 0,
+                    totalDeposit: parseFloat(value.totalDeposit) || 0,
+                    totalWithdraw: parseFloat(value.totalWithdraw) || 0,
+                    totalBet: parseFloat(value.totalBet) || 0,
+                    totalWin: parseFloat(value.totalWin) || 0,
+                    reward: parseFloat(value.rewardAmount || value.claimedDepositAmount) || 0,
+                    wager: parseFloat(value.wager) || 0,
+                    invites: parseInt(value.totalInvites || value.invites) || 0,
+                    winControl: value.winControl || "default",
+                    registeredAt: value.registeredAt || "نامعلوم تاریخ"
+                };
+            });
+
+            // SORTING LOGIC: Jo sab se zyada win karega wo upar aayega
+            allUsers.sort((a, b) => b.totalWin - a.totalWin);
+
+            // Set top 5 winners flag (for the Top Badge)
+            let topCount = 0;
+            allUsers.forEach(u => {
+                if(topCount < 5 && u.totalWin > 0) {
+                    u.isTop = true;
+                    topCount++;
+                } else {
+                    u.isTop = false;
+                }
+            });
+
+            updateStats();
+            filterData();
+        }, (error) => {
+            console.error("Firebase Error:", error);
+            document.getElementById('user-list-container').innerHTML = "<p style='text-align:center; color:red;'>ڈیٹا لوڈ کرنے میں مسئلہ پیش آیا۔</p>";
+        });
+
+        function updateStats() {
+            const todayStr = new Date().toLocaleDateString();
+            document.getElementById('stat-total').innerText = allUsers.length;
+            
+            const todayCount = allUsers.filter(u => {
+                let d = new Date(u.registeredAt);
+                return !isNaN(d) && d.toLocaleDateString() === todayStr;
+            }).length;
+            
+            document.getElementById('stat-today').innerText = todayCount;
+        }
+
+        window.setFilter = function(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterData();
+        }
+
+        window.filterData = function() {
+            const searchTerm = document.getElementById('search-box').value.trim();
+            const now = new Date();
+            
+            let filtered = allUsers.filter(user => {
+                let regDate = new Date(user.registeredAt);
+                let isValidDate = !isNaN(regDate);
+                let timeMatch = true;
+
+                // Time Filter Logic
+                if (currentFilter !== 'all') {
+                    if (!isValidDate) {
+                        timeMatch = false; // Ignore users with no date in filters
+                    } else {
+                        if(currentFilter === 'today') {
+                            timeMatch = regDate.toLocaleDateString() === now.toLocaleDateString();
+                        } else if(currentFilter === 'yesterday') {
+                            const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
+                            timeMatch = regDate.toLocaleDateString() === yesterday.toLocaleDateString();
+                        } else if(currentFilter === '7days') {
+                            const diffTime = Math.abs(now - regDate);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            timeMatch = diffDays <= 7;
+                        }
+                    }
+                }
+
+                // Search Match
+                let userPhone = (user.mobile || "").toString();
+                let searchMatch = userPhone.includes(searchTerm);
+
+                return timeMatch && searchMatch;
+            });
+
+            renderList(filtered);
+            document.getElementById('stat-filtered').innerText = filtered.length;
+        }
+
+        function renderList(users) {
+            const container = document.getElementById('user-list-container');
+            container.innerHTML = "";
+            
+            if(users.length === 0) {
+                container.innerHTML = "<p style='text-align:center; padding:20px; color:#888;'>کوئی یوزر نہیں ملا۔</p>";
+                return;
+            }
+
+            users.forEach((user) => {
+                const item = document.createElement('div');
+                item.className = 'user-item';
+                
+                // Show Top Player Badge
+                let topBadge = user.isTop ? `<span class="top-badge">🌟 TOP PLAYER</span>` : "";
+
+                item.innerHTML = `
+                    <div class="user-summary" onclick="toggleDetails(this)">
+                        <span class="phone">📱 ${user.mobile} ${topBadge}</span>
+                        <span class="arrow">تفصیل ▼</span>
+                    </div>
+                    <div class="user-details">
+                        
+                        <!-- Details Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-box highlight">
+                                <div class="s-title">موجودہ بیلنس</div>
+                                <div class="s-val gold">Rs ${user.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="s-title">کل ڈیپوزٹ</div>
+                                <div class="s-val">Rs ${user.totalDeposit.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="s-title">کل نکالنا (Withdraw)</div>
+                                <div class="s-val red">Rs ${user.totalWithdraw.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="s-title">کل منافع (Total Win)</div>
+                                <div class="s-val green">Rs ${user.totalWin.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="s-title">کل بیٹس (Total Bet)</div>
+                                <div class="s-val">Rs ${user.totalBet.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="s-title">ریوارڈ / انوائٹ</div>
+                                <div class="s-val" style="color:#00e5ff;">Rs ${user.reward.toLocaleString()} / ${user.invites}</div>
+                            </div>
+                        </div>
+                        <div style="font-size:11px; color:#aaa; margin-bottom:15px; text-align:right;">
+                            رجسٹریشن: ${user.registeredAt}
+                        </div>
+
+                        <!-- Editable Controls -->
+                        <div class="edit-section">
+                            <div style="font-size:13px; color:#FFD700; margin-bottom:10px; font-weight:bold;">
+                                <i class="fas fa-edit"></i> یوزر کو ایڈٹ کریں
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>پاس ورڈ (Password)</label>
+                                <input type="text" id="pass_${user.id}" value="${user.password}">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>ویجر (Wager Amount)</label>
+                                <input type="number" id="wager_${user.id}" value="${user.wager}">
+                            </div>
+
+                            <div class="input-group">
+                                <label>گیم کنٹرول (Winning Percentage)</label>
+                                <select id="win_control_${user.id}">
+                                    <option value="default" ${user.winControl === 'default' ? 'selected' : ''}>نارمل گیم (50/50)</option>
+                                    <option value="force_win" ${user.winControl === 'force_win' ? 'selected' : ''}>ہمیشہ جیتے (100% Win)</option>
+                                    <option value="force_loss" ${user.winControl === 'force_loss' ? 'selected' : ''}>ہمیشہ ہارے (100% Loss)</option>
+                                </select>
+                            </div>
+
+                            <button class="save-btn" onclick="saveUserData('${user.id}', this)">محفوظ کریں (Save)</button>
+                        </div>
+
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        window.toggleDetails = function(el) {
+            const details = el.nextElementSibling;
+            const isOpen = details.style.display === "block";
+            
+            // Close all others
+            document.querySelectorAll('.user-details').forEach(d => d.style.display = "none");
+            document.querySelectorAll('.arrow').forEach(a => a.innerText = "تفصیل ▼");
+            
+            if (!isOpen) {
+                details.style.display = "block";
+                el.querySelector('.arrow').innerText = "بند کریں ▲";
+            }
+        }
+
+        // Save Edited Data to Firebase
+        window.saveUserData = function(userId, btnEl) {
+            const newPass = document.getElementById(`pass_${userId}`).value;
+            const newWager = parseFloat(document.getElementById(`wager_${userId}`).value) || 0;
+            const newWinControl = document.getElementById(`win_control_${userId}`).value;
+
+            // Loading state
+            const originalText = btnEl.innerText;
+            btnEl.innerText = "محفوظ ہو رہا ہے...";
+            btnEl.disabled = true;
+
+            // Update Database
+            update(ref(db, `users/${userId}`), {
+                password: newPass,
+                wager: newWager,
+                winControl: newWinControl
+            }).then(() => {
+                btnEl.innerText = "✓ محفوظ ہو گیا";
+                btnEl.style.background = "#2ecc71"; // Green color
+                setTimeout(() => {
+                    btnEl.innerText = originalText;
+                    btnEl.style.background = "linear-gradient(135deg, #FFD700, #DAA520)";
+                    btnEl.disabled = false;
+                }, 2000);
+            }).catch(err => {
+                alert("مسئلہ پیش آیا: " + err.message);
+                btnEl.innerText = originalText;
+                btnEl.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>

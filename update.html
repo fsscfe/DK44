@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DK44 - Full Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-image: url('Rgbg.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: #001a17; 
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        .glass-panel {
+            background: rgba(0, 30, 25, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .table-container { max-height: 65vh; overflow-y: auto; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #c49124; border-radius: 10px; }
+
+        .btn-gold {
+            background: linear-gradient(180deg, #f7d06a 0%, #c49124 100%);
+            color: #00332e;
+            font-weight: bold;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(196, 145, 36, 0.5); }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+
+        input, textarea {
+            background: rgba(0,0,0,0.5); border: 1px solid #c49124; color: white;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #f7d06a; }
+
+        .user-card {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #c49124;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .user-header {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .user-header:hover { background: rgba(255, 215, 0, 0.1); }
+        .user-details {
+            display: none;
+            padding: 15px;
+            background: rgba(0, 77, 69, 0.3);
+            border-top: 1px solid rgba(196, 145, 36, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div id="mainDashboard" class="flex-1 flex flex-col h-screen">
+        <!-- Header -->
+        <header class="glass-panel m-4 p-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <!-- Back Arrow Added Here -->
+                <a href="index.html" class="text-yellow-500 hover:text-white transition text-2xl" title="Go Back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-yellow-500"><i class="fas fa-crown mr-2"></i>DK44 Admin</h1>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="switchTab('users')" id="tab-users" class="btn-gold px-6 py-2 rounded">Users List</button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-white transition">App Settings</button>
+            </div>
+        </header>
+
+        <!-- USERS TAB -->
+        <div id="usersSection" class="flex-1 p-4 pt-0 flex flex-col gap-4">
+            <div class="glass-panel p-4 flex justify-between items-center">
+                <div class="relative w-1/3 min-w-[250px]">
+                    <i class="fas fa-search absolute left-3 top-3 text-yellow-500"></i>
+                    <input type="text" id="searchInput" onkeyup="searchUsers()" placeholder="Search User Number..." class="w-full pl-10 p-2 rounded">
+                </div>
+                <div class="flex gap-6 text-lg font-bold bg-[#004d45] px-4 py-2 rounded-lg border border-yellow-500/30">
+                    <div>Total Users: <span id="totalUsersCount" class="text-yellow-500 ml-2">0</span></div>
+                </div>
+            </div>
+
+            <!-- Users List -->
+            <div class="glass-panel flex-1 table-container p-4" id="usersListContainer">
+                <!-- User Cards Will Append Here -->
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settingsSection" class="hidden flex-1 p-4 pt-0">
+            <div class="glass-panel p-6 w-full max-w-lg mx-auto mt-10">
+                <h2 class="text-2xl font-bold text-yellow-500 mb-6 border-b border-gray-600 pb-2"><i class="fas fa-mobile-alt mr-2"></i>Update & Settings</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2 font-bold">App Version (e.g. 1.1)</label>
+                    <input type="number" step="0.1" id="appVersionInput" class="w-full p-3 rounded">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2 font-bold">APK Download Link</label>
+                    <input type="text" id="appUrlInput" class="w-full p-3 rounded" placeholder="https://link-to-your-app.apk">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2 font-bold">Update Image URL (Optional)</label>
+                    <input type="text" id="updateImageUrlInput" class="w-full p-3 rounded" placeholder="https://link.com/image.png">
+                    <p class="text-xs text-gray-400 mt-1">Leave empty to use local update.png</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-green-400 mb-2 font-bold"><i class="fas fa-gift mr-1"></i> Update Reward (Rs)</label>
+                    <input type="number" id="updateRewardInput" class="w-full p-3 rounded border-green-500" placeholder="e.g. 50">
+                    <p class="text-xs text-gray-400 mt-1">Users will get this bonus automatically when they download the new update.</p>
+                </div>
+                
+                <button onclick="saveSystemSettings()" class="btn-gold w-full p-3 rounded-lg text-lg"><i class="fas fa-save mr-2"></i>Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="balanceModal" class="modal">
+        <div class="glass-panel p-6 w-96 relative">
+            <button onclick="closeModal('balanceModal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold text-yellow-500 mb-4"><i class="fas fa-wallet"></i> Balance & Wager</h2>
+            
+            <p class="mb-1 text-sm text-gray-300">User: <span id="balTargetPhone" class="font-bold text-white"></span></p>
+            <div class="flex justify-between mb-4 border-b border-gray-600 pb-2">
+                <p class="text-sm text-gray-300">Balance: <span id="balTargetAmount" class="font-bold text-green-400"></span></p>
+                <p class="text-sm text-gray-300">Current Wager: <span id="balTargetWager" class="font-bold text-red-400"></span></p>
+            </div>
+            
+            <label class="block text-gray-300 text-sm mb-1">1. Enter Amount (Rs):</label>
+            <input type="number" id="balAmountInput" oninput="calculateWager()" placeholder="e.g. 500" class="w-full p-2 rounded mb-3">
+            
+            <label class="block text-gray-300 text-sm mb-1">2. Wager Multiplier (e.g. 3 for 3x):</label>
+            <input type="number" id="wagerMultiplierInput" oninput="calculateWager()" placeholder="Multiplier" value="1" class="w-full p-2 rounded mb-3">
+            
+            <label class="block text-yellow-500 font-bold text-sm mb-1">Total Wager to Add:</label>
+            <input type="number" id="wagerTotalInput" placeholder="0" readonly class="w-full p-2 rounded mb-4 bg-yellow-900/30 text-yellow-300 outline-none border-yellow-500/50">
+            
+            <div class="flex gap-2">
+                <button onclick="updateBalanceAndWager('add')" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded font-bold transition">Add (+)</button>
+                <button onclick="updateBalanceAndWager('sub')" class="flex-1 bg-red-600 hover:bg-red-500 py-3 rounded font-bold transition">Remove (-)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block Modal -->
+    <div id="blockModal" class="modal">
+        <div class="glass-panel p-6 w-96 relative">
+            <button onclick="closeModal('blockModal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold text-red-500 mb-4"><i class="fas fa-ban"></i> Block User</h2>
+            <p class="mb-4 text-sm text-gray-300">User: <span id="blockTargetPhone" class="font-bold text-white"></span></p>
+            <textarea id="blockReasonInput" rows="3" class="w-full p-3 rounded text-white mb-4" placeholder="Reason for block..."></textarea>
+            <button onclick="confirmBlockUser()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded font-bold transition">Confirm Block</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260",
+            authDomain: "eagle-trading-81262.firebaseapp.com",
+            databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com",
+            projectId: "eagle-trading-81262",
+            storageBucket: "eagle-trading-81262.firebasestorage.app",
+            messagingSenderId: "996540768145",
+            appId: "1:996540768145:web:76304ad1ffe78d45780430"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.onload = function() { 
+            loadUsers(); 
+            loadSettings(); 
+        };
+
+        window.switchTab = function(tab) {
+            document.getElementById('usersSection').style.display = tab === 'users' ? 'flex' : 'none';
+            document.getElementById('settingsSection').style.display = tab === 'settings' ? 'block' : 'none';
+            document.getElementById('tab-users').className = tab === 'users' ? 'btn-gold px-6 py-2 rounded' : 'bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-white';
+            document.getElementById('tab-settings').className = tab === 'settings' ? 'btn-gold px-6 py-2 rounded' : 'bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-white';
+        };
+
+        // --- Load Users ---
+        function loadUsers() {
+            onValue(ref(db, 'users'), (snapshot) => {
+                const container = document.getElementById('usersListContainer');
+                container.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    let count = 0;
+                    const users = snapshot.val();
+
+                    for (const phone in users) {
+                        const user = users[phone];
+                        const bal = parseFloat(user.balance || 0).toFixed(2);
+                        const wager = parseFloat(user.wager || 0).toFixed(2);
+                        
+                        // یہاں ہم نے کوڈ بدلا ہے تاکہ یہ صحیح طریقے سے status کو پہچانے
+                        const isBlocked = user.status === "blocked";
+                        
+                        const safePhoneId = phone.replace(/[^0-9]/g, '');
+                        count++;
+
+                        const card = document.createElement('div');
+                        card.className = "user-card user-row";
+                        card.innerHTML = `
+                            <div class="user-header phone-col" onclick="toggleUser('${safePhoneId}')">
+                                <span><i class="fas fa-user-circle text-yellow-500 mr-2"></i> ${phone}</span>
+                                <i id="icon-${safePhoneId}" class="fas fa-chevron-down text-gray-400"></i>
+                            </div>
+                            <div id="details-${safePhoneId}" class="user-details flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm text-gray-300">Balance: <span class="font-bold text-green-400 text-lg">${bal} Rs</span></p>
+                                    <p class="text-sm text-gray-300">Wager: <span class="font-bold text-red-400">${wager} Rs</span></p>
+                                    <p class="text-sm text-gray-300 mt-1">Status: ${isBlocked ? '<span class="text-red-500 font-bold">Blocked</span>' : '<span class="text-green-500 font-bold">Active</span>'}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="openBalanceModal('${phone}', ${bal}, ${wager})" class="bg-[#004d45] px-4 py-2 rounded border border-[#006b60] shadow text-white"><i class="fas fa-wallet mr-1"></i> Manage</button>
+                                    ${isBlocked 
+                                        ? `<button onclick="unblockUser('${phone}')" class="bg-gray-600 px-4 py-2 rounded border border-gray-400 text-white"><i class="fas fa-unlock"></i> Unblock</button>`
+                                        : `<button onclick="openBlockModal('${phone}')" class="bg-red-900 px-4 py-2 rounded border border-red-500 text-red-200"><i class="fas fa-ban"></i> Block</button>`}
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    }
+                    document.getElementById('totalUsersCount').innerText = count;
+                }
+            });
+        }
+
+        window.toggleUser = function(id) {
+            const details = document.getElementById('details-' + id);
+            const icon = document.getElementById('icon-' + id);
+            if(details.style.display === 'flex') {
+                details.style.display = 'none';
+                icon.className = "fas fa-chevron-down text-gray-400";
+            } else {
+                details.style.display = 'flex';
+                icon.className = "fas fa-chevron-up text-yellow-500";
+            }
+        };
+
+        window.searchUsers = function() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-row');
+            rows.forEach(row => {
+                const phone = row.querySelector('.phone-col').innerText.toLowerCase();
+                row.style.display = phone.includes(input) ? '' : 'none';
+            });
+        };
+
+        // --- Balance Management ---
+        let targetPhone = "";
+        window.openBalanceModal = function(phone, bal, wager) {
+            targetPhone = phone;
+            document.getElementById('balTargetPhone').innerText = phone;
+            document.getElementById('balTargetAmount').innerText = bal + " Rs";
+            document.getElementById('balTargetWager').innerText = wager + " Rs";
+            document.getElementById('balAmountInput').value = "";
+            document.getElementById('wagerMultiplierInput').value = "1";
+            document.getElementById('wagerTotalInput').value = "0";
+            document.getElementById('balanceModal').style.display = 'flex';
+        };
+
+        window.calculateWager = function() {
+            let amt = parseFloat(document.getElementById('balAmountInput').value) || 0;
+            let multi = parseFloat(document.getElementById('wagerMultiplierInput').value) || 1;
+            document.getElementById('wagerTotalInput').value = amt * multi;
+        };
+
+        window.updateBalanceAndWager = async function(action) {
+            const amount = parseFloat(document.getElementById('balAmountInput').value);
+            const wagerToAdd = parseFloat(document.getElementById('wagerTotalInput').value) || 0;
+            if(!amount) return;
+            
+            const refUser = ref(db, `users/${targetPhone}`);
+            const snap = await get(refUser);
+            
+            if(snap.exists()) {
+                let userData = snap.val();
+                let bal = parseFloat(userData.balance || 0);
+                let currentWager = parseFloat(userData.wager || 0);
+
+                if (action === 'add') {
+                    bal += amount;
+                    currentWager += wagerToAdd; 
+                } else {
+                    bal -= amount;
+                    if(bal < 0) bal = 0;
+                }
+                
+                await update(refUser, { balance: bal, wager: currentWager });
+                closeModal('balanceModal');
+            }
+        };
+
+        // --- Block Management (Fixed to match App!) ---
+        window.openBlockModal = function(phone) {
+            targetPhone = phone;
+            document.getElementById('blockTargetPhone').innerText = phone;
+            document.getElementById('blockReasonInput').value = "آپ کا اکاؤنٹ انتظامیہ کی طرف سے بلاک کر دیا گیا ہے۔ سپورٹ سے رابطہ کریں۔";
+            document.getElementById('blockModal').style.display = 'flex';
+        };
+
+        // فائر بیس میں "status: blocked" اور "block_message" جائے گا
+        window.confirmBlockUser = async function() {
+            await update(ref(db, `users/${targetPhone}`), {
+                status: "blocked", 
+                block_message: document.getElementById('blockReasonInput').value
+            });
+            closeModal('blockModal');
+        };
+
+        // ان بلاک کرنے پر status "active" ہو جائے گا
+        window.unblockUser = async function(phone) {
+            if(confirm("Are you sure you want to unblock " + phone + "?")) {
+                await update(ref(db, `users/${phone}`), { 
+                    status: "active", 
+                    block_message: "" 
+                });
+            }
+        };
+
+        // --- Settings Management ---
+        function loadSettings() {
+            onValue(ref(db, 'system_settings/app_update'), (snap) => {
+                if(snap.exists()) {
+                    const d = snap.val();
+                    document.getElementById('appVersionInput').value = d.version || 1.0;
+                    document.getElementById('appUrlInput').value = d.download_url || "";
+                    document.getElementById('updateImageUrlInput').value = d.update_image_url || "";
+                    document.getElementById('updateRewardInput').value = d.reward_amount || 0;
+                }
+            });
+        }
+
+        window.saveSystemSettings = async function() {
+            await update(ref(db, 'system_settings/app_update'), {
+                version: parseFloat(document.getElementById('appVersionInput').value),
+                download_url: document.getElementById('appUrlInput').value,
+                update_image_url: document.getElementById('updateImageUrlInput').value, 
+                reward_amount: parseFloat(document.getElementById('updateRewardInput').value) || 0
+            });
+            alert("Settings Updated! App will now ask users to update and give rewards automatically.");
+        };
+
+        window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
+    </script>
+</body>
+</html>

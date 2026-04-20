@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DK44 Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --gold: #FFD700; 
+            --red: #e74c3c; 
+            --green: #2ecc71; 
+            --panel: rgba(0, 31, 24, 0.85); 
+            --hover-panel: rgba(0, 45, 35, 0.95);
+        }
+        * { box-sizing: border-box; }
+        body { 
+            background: #000 url('Rgbg.png') center/cover no-repeat fixed; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            margin: 0; 
+            padding-bottom: 40px; 
+            min-height: 100vh; 
+        }
+        
+        /* Top Navigation Bar */
+        .top-bar { 
+            background: rgba(0,21,16,0.95); 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid var(--gold); 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .admin-profile { display: flex; align-items: center; gap: 10px; }
+        .admin-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold); }
+        
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        
+        .header-title { 
+            text-align: center; color: var(--gold); font-size: 32px; margin: 20px 0 30px; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Section Titles */
+        .section-title {
+            color: #fff; font-size: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; margin: 30px 0 15px; display: flex; align-items: center; gap: 10px;
+        }
+
+        /* Dashboard Grid Layout */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 20px; 
+        }
+
+        /* Menu Cards (Buttons) */
+        .menu-card { 
+            background: var(--panel); 
+            padding: 25px 15px; 
+            border-radius: 16px; 
+            text-align: center; 
+            border: 1px solid #004D40; 
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .menu-card:hover { 
+            background: var(--hover-panel); 
+            border-color: var(--gold); 
+            transform: translateY(-5px); 
+            box-shadow: 0 8px 20px rgba(255,215,0,0.2);
+        }
+        .menu-card i { font-size: 40px; margin-bottom: 15px; color: var(--gold); }
+        .menu-card span { font-size: 16px; font-weight: bold; letter-spacing: 0.5px; }
+
+        /* Notification Badges */
+        .badge {
+            position: absolute; top: -8px; right: -8px; background: var(--red); color: white; font-size: 14px; font-weight: bold; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #000; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: none;
+        }
+
+        /* Footer text */
+        .footer { text-align: center; margin-top: 50px; color: #555; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="admin-profile">
+        <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/40/000000/FFD700?text=DK'">
+        <h3 style="margin:0; color:var(--gold);">DK44 Admin</h3>
+    </div>
+    <span id="live-time" style="color:#aaa; font-weight:bold;"></span>
+</div>
+
+<div class="container">
+    <h1 class="header-title">مین ایڈمن ڈیش بورڈ</h1>
+
+    <!-- 1. Finance Section -->
+    <div class="section-title"><i class="fas fa-wallet" style="color:var(--gold);"></i> فنانس کنٹرول (Finance)</div>
+    <div class="grid">
+        <a href="deposit.admin.html" class="menu-card">
+            <div class="badge" id="dep-badge">0</div>
+            <i class="fas fa-hand-holding-usd" style="color:var(--green);"></i>
+            <span>Deposit Admin</span>
+        </a>
+        <a href="withdraw.admin.html" class="menu-card">
+            <div class="badge" id="wit-badge">0</div>
+            <i class="fas fa-money-bill-transfer" style="color:var(--red);"></i>
+            <span>Withdraw Admin</span>
+        </a>
+    </div>
+
+    <!-- 2. User Management Section -->
+    <div class="section-title"><i class="fas fa-users" style="color:var(--gold);"></i> یوزرز اور سیٹنگز (Users & Support)</div>
+    <div class="grid">
+        <a href="user.admin.html" class="menu-card">
+            <i class="fas fa-user-cog" style="color:#3498db;"></i>
+            <span>User Manager</span>
+        </a>
+        <a href="admin.customer.html" class="menu-card">
+            <i class="fas fa-headset" style="color:#e67e22;"></i>
+            <span>Customer Support</span>
+        </a>
+        <a href="notification.html" class="menu-card">
+            <i class="fas fa-bell" style="color:#f1c40f;"></i>
+            <span>Send Notifications</span>
+        </a>
+        <a href="invite.admin..html" class="menu-card">
+            <i class="fas fa-user-plus" style="color:#9b59b6;"></i>
+            <span>Invite Admin</span>
+        </a>
+        <!-- NEW UPDATE.HTML OPTION ADDED HERE -->
+        <a href="update.html" class="menu-card">
+            <i class="fas fa-sync-alt" style="color:#00cec9;"></i>
+            <span>System Update</span>
+        </a>
+    </div>
+
+    <!-- 3. Games Admin Section -->
+    <div class="section-title"><i class="fas fa-gamepad" style="color:var(--gold);"></i> گیمز کنٹرول (Games Admin)</div>
+    <div class="grid">
+        <a href="aviater.admin.html" class="menu-card">
+            <i class="fas fa-plane-departure" style="color:#e74c3c;"></i>
+            <span>Aviator Admin</span>
+        </a>
+        <a href="Highfly.html" class="menu-card">
+            <i class="fas fa-rocket" style="color:#9b59b6;"></i>
+            <span>High Fly</span>
+        </a>
+        <a href="toss.admin.html" class="menu-card">
+            <i class="fas fa-coins" style="color:#f1c40f;"></i>
+            <span>Toss Admin</span>
+        </a>
+        <a href="mines.html" class="menu-card">
+            <i class="fas fa-bomb" style="color:#7f8c8d;"></i>
+            <span>Mines 1</span>
+        </a>
+        <a href="mines2.html" class="menu-card">
+            <i class="fas fa-gem" style="color:#1abc9c;"></i>
+            <span>Mines 2</span>
+        </a>
+        <a href="crash.html" class="menu-card">
+            <i class="fas fa-chart-line" style="color:#2ecc71;"></i>
+            <span>Crash Game</span>
+        </a>
+    </div>
+
+    <div class="footer">
+        DK44 Admin Panel System &copy; 2024 - All Rights Reserved.
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260",
+        authDomain: "eagle-trading-81262.firebaseapp.com",
+        databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com",
+        projectId: "eagle-trading-81262",
+        storageBucket: "eagle-trading-81262.firebasestorage.app",
+        messagingSenderId: "996540768145",
+        appId: "1:996540768145:web:76304ad1ffe78d45780430"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Deposit Pending Badge Logic
+    onValue(ref(db, 'deposits/requests'), (snap) => {
+        let pendingCount = 0;
+        if (snap.exists()) {
+            snap.forEach(child => {
+                if ((child.val().status || '').toLowerCase() === 'pending') {
+                    pendingCount++;
+                }
+            });
+        }
+        const depBadge = document.getElementById('dep-badge');
+        if(pendingCount > 0) {
+            depBadge.style.display = 'flex';
+            depBadge.innerText = pendingCount;
+        } else {
+            depBadge.style.display = 'none';
+        }
+    });
+
+    // Withdraw Pending Badge Logic
+    onValue(ref(db, 'withdraws/requests'), (snap) => {
+        let pendingCount = 0;
+        if (snap.exists()) {
+            snap.forEach(child => {
+                if ((child.val().status || '').toLowerCase() === 'pending') {
+                    pendingCount++;
+                }
+            });
+        }
+        const witBadge = document.getElementById('wit-badge');
+        if(pendingCount > 0) {
+            witBadge.style.display = 'flex';
+            witBadge.innerText = pendingCount;
+        } else {
+            witBadge.style.display = 'none';
+        }
+    });
+
+    // Live Time Clock
+    setInterval(() => {
+        document.getElementById('live-time').innerText = new Date().toLocaleString('ur-PK');
+    }, 1000);
+</script>
+
+</body>
+</html>

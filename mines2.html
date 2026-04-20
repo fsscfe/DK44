@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DK44 - Live Trace Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* =========================================
+           CSS VARIABLES & DESIGN
+           ========================================= */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-red: #ff0055;
+            --neon-green: #00ff66;
+            --gold: #FFD700;
+            --bg-card: rgba(0, 31, 24, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body { 
+            background: linear-gradient(rgba(0, 41, 31, 0.9), rgba(0, 41, 31, 0.9)), url('https://i.imgur.com/3q1j5t5.png'); 
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: white; padding: 15px; overflow-x: hidden;
+        }
+
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; background: var(--bg-card); padding: 15px 20px; 
+            border-radius: 12px; border: 1px solid #004D40; 
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+        
+        /* BACK BUTTON STYLES */
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .back-btn { color: var(--gold); font-size: 24px; text-decoration: none; transition: 0.3s; display: flex; align-items: center;}
+        .back-btn:hover { color: white; transform: scale(1.1); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+        .header h2 { color: #FF6B35; font-size: 24px; font-weight: 900; text-transform: uppercase; margin: 0; }
+        .header-sub { font-size: 12px; color: var(--neon-blue); letter-spacing: 2px; }
+
+        /* Layout */
+        .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .column-left { flex: 1; min-width: 300px; }
+        .column-right { flex: 1; min-width: 320px; }
+
+        .card { 
+            background: var(--bg-card); border: 1px solid #004D40; 
+            padding: 20px; border-radius: 15px; margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+
+        .card h3 { color: var(--neon-blue); font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed #004D40; padding-bottom: 10px;}
+
+        /* Inputs & Controls */
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--gold);
+            background: #001510; color: white; font-size: 16px; text-align: center; margin-bottom: 10px;
+        }
+        input[type=range] { width: 100%; margin: 15px 0; accent-color: var(--neon-blue); }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; text-transform: uppercase; }
+        .btn:active { transform: scale(0.95); }
+        .btn-main { background: linear-gradient(to bottom, #FFEB3B, #FBC02D); color: black; }
+        .btn-smart { background: linear-gradient(to right, #00C9FF, #92FE9D); color: black; margin-bottom: 15px;}
+        .btn-force-bomb { background: #e74c3c; color: white; border: 2px solid #c0392b; box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); margin-top: 10px;}
+
+        /* User List Styling */
+        .user-list { display: flex; flex-direction: column; gap: 8px; max-height: 450px; overflow-y: auto; padding-right: 5px; }
+        .user-list::-webkit-scrollbar { width: 5px; }
+        .user-list::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 10px; }
+
+        .user-item { 
+            background: #001F18; padding: 12px; border-radius: 8px; display: flex; 
+            justify-content: space-between; align-items: center; cursor: pointer; 
+            border: 1px solid #004D40; transition: 0.3s;
+        }
+        .user-item:hover, .user-item.active { border-color: var(--gold); background: #003328; box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.2); }
+        
+        .badge { background: #555; font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: white; }
+        .badge.playing { background: var(--neon-green); color: black; box-shadow: 0 0 8px var(--neon-green); }
+
+        /* Live Monitor Panel */
+        .monitor-container { display: flex; flex-direction: column; align-items: center; border-color: var(--gold); }
+        .live-stats { background: #000; border: 1px dashed var(--neon-blue); padding: 12px; border-radius: 10px; margin-bottom: 15px; color: white; font-size: 14px; text-align: center; width: 100%; }
+        .live-stats span { font-weight: bold; color: var(--gold); }
+        
+        .history-box { background: rgba(0,0,0,0.6); width: 100%; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--gold); text-align: left; font-size: 13px; line-height: 1.6; }
+
+        .live-grid { 
+            display: grid; grid-template-columns: repeat(5, 1fr); 
+            gap: 6px; background: #000; padding: 10px; border-radius: 12px; 
+            width: 100%; max-width: 320px; border: 2px solid var(--neon-blue); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); margin-top: 15px;
+        }
+        .live-cell { 
+            aspect-ratio: 1; background: #1a2332; border-radius: 6px; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 22px; transition: 0.3s; border: 1px solid #333;
+        }
+        .live-cell.bomb { background: rgba(255, 0, 85, 0.2); border-color: var(--neon-red); box-shadow: inset 0 0 15px var(--neon-red); }
+        .live-cell.safe-clicked { background: rgba(0, 255, 102, 0.2); border-color: var(--neon-green); box-shadow: inset 0 0 15px var(--neon-green); }
+
+        /* Helpers */
+        .limit-text { font-size: 15px; color: var(--gold); text-align: center; font-weight: bold; background: #000; padding: 8px; border-radius: 5px; margin-top: 10px; }
+        .flex-btns { display: flex; gap: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <a href="home.html" class="back-btn" title="Go Back"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <h2><i class="fas fa-satellite-dish"></i> DK44 ADMIN</h2>
+                <div class="header-sub">LIVE TRACE & OVERRIDE SYSTEM</div>
+            </div>
+        </div>
+        <button class="btn btn-smart" style="width: auto; padding: 8px 15px; margin: 0;" onclick="smartBalance()">⚖️ Smart 40%</button>
+    </div>
+
+    <div class="flex-row">
+        <!-- LEFT COLUMN: GLOBAL & USERS -->
+        <div class="column-left">
+            <div class="card" style="border-color: var(--neon-blue);">
+                <h3><i class="fas fa-globe"></i> Global Target System</h3>
+                <input type="range" min="0" max="100" step="10" value="80" id="globalRtp" oninput="updateGlobalRTP(this.value)">
+                
+                <div style="display:flex; justify-content: space-between; font-size: 12px; font-weight: bold;">
+                    <span style="color: var(--neon-red);">Hard (0%)</span>
+                    <span id="rtpLabel" style="color: var(--neon-blue); font-size: 18px;">80%</span>
+                    <span style="color: var(--neon-green);">Easy (100%)</span>
+                </div>
+                
+                <div class="limit-text" id="globalLimitText">Max Win Limit: 50x</div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-users"></i> All Users & Live Players</h3>
+                <input type="text" id="searchUser" placeholder="🔍 Search Phone Number..." onkeyup="renderUsers()">
+                <div class="user-list" id="userList">
+                    <div style="text-align:center; color:#aaa; margin-top:10px;">Loading users...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: INDIVIDUAL & LIVE MONITOR -->
+        <div class="column-right">
+            
+            <!-- User Control Panel -->
+            <div class="card" id="userPanel" style="display: none; border-color: var(--gold);">
+                <h3><i class="fas fa-crosshairs"></i> Target User: <span id="selUserPhone" style="color:white; margin-left: 5px;"></span></h3>
+                
+                <label style="font-size: 12px; color: var(--neon-blue);">Custom Win Chance (%)</label>
+                <input type="number" id="indivRtp" placeholder="Leave empty for Global %">
+                
+                <div class="flex-btns">
+                    <button class="btn btn-main" onclick="saveIndividual()"><i class="fas fa-save"></i> Save %</button>
+                    <button class="btn btn-force-bomb" id="btnDropBomb" onclick="forceKillNext()"><i class="fas fa-skull"></i> Next Click Bomb</button>
+                </div>
+            </div>
+
+            <!-- Live Monitor Panel -->
+            <div class="card monitor-container" id="monitorPanel" style="display: none;">
+                <h3><i class="fas fa-tv"></i> LIVE USER MONITOR</h3>
+                
+                <!-- Dynamic Stats Box -->
+                <div class="live-stats" id="liveStatsText">
+                    Loading User Stats...
+                </div>
+                
+                <div class="live-grid" id="adminGrid">
+                    <!-- Grid renders via JS -->
+                </div>
+                
+                <p style="font-size: 11px; color: #aaa; margin-top: 15px; text-align: center; line-height: 1.8;">
+                    <span style="color:var(--neon-red); font-weight:bold;">🟥 RED = Bomb Locations</span><br>
+                    <span style="color:var(--neon-green); font-weight:bold;">🟩 GREEN = Clicked Safe</span><br>
+                    <span style="color:#555; font-weight:bold;">⬛ BLACK = Hidden Box</span>
+                </p>
+            </div>
+
+            <!-- Standby Screen -->
+            <div class="card" id="standbyPanel" style="text-align: center; padding: 50px 20px; border-style: dashed;">
+                <i class="fas fa-hand-pointer" style="font-size: 40px; color: var(--neon-blue); margin-bottom: 15px;"></i>
+                <h3 style="justify-content: center; border: none; color: #aaa;">Select a user from the list to view Details & Live Trace</h3>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260",
+            authDomain: "eagle-trading-81262.firebaseapp.com",
+            databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com",
+            projectId: "eagle-trading-81262",
+            storageBucket: "eagle-trading-81262.firebasestorage.app",
+            messagingSenderId: "996540768145",
+            appId: "1:996540768145:web:76304ad1ffe78d45780430"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let allUsers = {};
+        let activeLiveSessions = {};
+        let selectedUser = null;
+
+        function getLimitText(val) {
+            val = Number(val);
+            if(val <= 10) return "Max Win: 1.5x";
+            if(val === 20) return "Max Win: 2x";
+            if(val === 30) return "Max Win: 4x";
+            if(val === 40) return "Max Win: 8x";
+            if(val === 50) return "Max Win: 15x";
+            if(val === 60) return "Max Win: 24x";
+            if(val === 70) return "Max Win: 30x";
+            if(val === 80) return "Max Win: 50x";
+            if(val === 90) return "Max Win: 100x";
+            if(val === 100) return "UNLIMITED WIN";
+            return "Custom Limit";
+        }
+
+        // Listen to Global Settings
+        onValue(ref(db, 'admin_settings/mines_control/global'), snap => {
+            if(snap.exists()) {
+                let rtp = snap.val().rtp || 80;
+                document.getElementById('globalRtp').value = rtp;
+                document.getElementById('rtpLabel').innerText = rtp + "%";
+                document.getElementById('globalLimitText').innerText = getLimitText(rtp);
+            }
+        });
+
+        // Listen to Live Sessions
+        onValue(ref(db, 'game_sync_mines/live_sessions'), snap => {
+            activeLiveSessions = snap.val() || {};
+            renderUsers(); 
+            if(selectedUser) renderLiveGrid();
+        });
+
+        // Listen to All Users
+        onValue(ref(db, 'users'), snap => {
+            allUsers = snap.val() || {};
+            renderUsers();
+            if(selectedUser) renderLiveGrid(); // Update stats if user balance changes
+        });
+
+        window.updateGlobalRTP = (val) => {
+            document.getElementById('rtpLabel').innerText = val + "%";
+            document.getElementById('globalLimitText').innerText = getLimitText(val);
+            clearTimeout(window.rtpTimer);
+            window.rtpTimer = setTimeout(() => { 
+                update(ref(db, 'admin_settings/mines_control/global'), { rtp: Number(val) }); 
+            }, 500);
+        };
+
+        window.smartBalance = () => {
+            if(!confirm("آٹو 40% (Max 8x) پر سیٹ کریں؟")) return;
+            update(ref(db, 'admin_settings/mines_control/global'), { rtp: 40 });
+            alert("✅ Smart Balance Active!");
+        };
+
+        // Render Users List (With Top Sorting logic)
+        window.renderUsers = () => {
+            const list = document.getElementById('userList'); 
+            let query = document.getElementById('searchUser').value.toLowerCase();
+            
+            // 1. Get all users and filter by search query
+            let userKeys = Object.keys(allUsers).filter(phone => phone.includes(query));
+            
+            // 2. Sort users: Live users on Top, Offline below
+            userKeys.sort((a, b) => {
+                let aLive = activeLiveSessions[a] ? 1 : 0;
+                let bLive = activeLiveSessions[b] ? 1 : 0;
+                if (aLive > bLive) return -1;
+                if (aLive < bLive) return 1;
+                return a.localeCompare(b); // Sort alphabetical if both are offline/online
+            });
+
+            list.innerHTML = "";
+            let found = false;
+            
+            // 3. Render sorted users
+            userKeys.forEach(phone => {
+                found = true;
+                let isPlaying = activeLiveSessions[phone] ? true : false;
+                
+                let div = document.createElement('div');
+                div.className = `user-item ${selectedUser === phone ? 'active' : ''}`;
+                div.innerHTML = `
+                    <span style="font-weight:bold; font-family: monospace;">${phone}</span>
+                    <span class="badge ${isPlaying ? 'playing' : ''}">${isPlaying ? '🟢 LIVE' : 'OFFLINE'}</span>
+                `;
+                div.onclick = () => selectUser(phone);
+                list.appendChild(div);
+            });
+
+            if(!found) list.innerHTML = "<div style='text-align:center; color:#aaa; margin-top:10px;'>No Users Found</div>";
+        };
+
+        // Select User
+        function selectUser(phone) {
+            selectedUser = phone;
+            
+            document.getElementById('standbyPanel').style.display = "none";
+            document.getElementById('userPanel').style.display = "block";
+            document.getElementById('monitorPanel').style.display = "flex";
+            document.getElementById('selUserPhone').innerText = phone;
+            
+            onValue(ref(db, `admin_settings/mines_control/individual/${phone}`), snap => {
+                let data = snap.val();
+                document.getElementById('indivRtp').value = data && data.rtp !== null && data.rtp !== undefined ? data.rtp : "";
+            }, {onlyOnce: true});
+
+            renderUsers(); 
+            renderLiveGrid(); 
+        }
+
+        window.saveIndividual = () => {
+            if(!selectedUser) return;
+            let val = document.getElementById('indivRtp').value;
+            let rtp = val === "" ? null : parseInt(val);
+            update(ref(db, `admin_settings/mines_control/individual/${selectedUser}`), { rtp: rtp });
+            
+            let btn = document.querySelector('.btn-main');
+            btn.innerHTML = "✅ SAVED!";
+            setTimeout(() => btn.innerHTML = "<i class='fas fa-save'></i> Save %", 2000);
+        };
+
+        window.forceKillNext = () => {
+            if(!selectedUser) return;
+            update(ref(db, `admin_settings/mines_control/individual/${selectedUser}`), { force_next_bomb: true });
+            
+            let btn = document.getElementById('btnDropBomb');
+            btn.innerHTML = "⏳ SIGNAL SENT...";
+            btn.style.background = "#e67e22";
+            btn.style.borderColor = "#d35400";
+            
+            setTimeout(() => {
+                btn.innerHTML = "<i class='fas fa-skull'></i> Next Click Bomb";
+                btn.style.background = "#e74c3c";
+                btn.style.borderColor = "#c0392b";
+            }, 3000);
+        };
+
+        // Render Live Grid & Complete Stats
+        function renderLiveGrid() {
+            const grid = document.getElementById('adminGrid');
+            const statusTxt = document.getElementById('liveStatsText');
+            grid.innerHTML = "";
+            
+            if(!selectedUser) return;
+
+            let userData = allUsers[selectedUser] || {};
+            let currentBalance = userData.balance ? parseFloat(userData.balance).toFixed(2) : "0.00";
+            
+            // Build Last Game History HTML
+            let historyHtml = `<div class="history-box" style="border-left-color: #555; color:#aaa;">No game history found.</div>`;
+            if (userData.game_records) {
+                let records = Object.values(userData.game_records);
+                if(records.length > 0) {
+                    let lastRec = records[records.length - 1]; // Get the most recent record
+                    let isWin = lastRec.status === 'win';
+                    let statusColor = isWin ? 'var(--neon-green)' : 'var(--neon-red)';
+                    let statusText = isWin ? 'CASHED OUT' : 'CRASHED (BOMB)';
+                    
+                    historyHtml = `
+                        <div class="history-box" style="border-left-color: ${statusColor};">
+                            <span style="color:var(--gold); font-weight:bold;">LAST GAME RESULT:</span><br>
+                            Bet Amount: <b>Rs. ${lastRec.betAmount}</b><br>
+                            Status: <b style="color:${statusColor};">${statusText}</b><br>
+                            Winning: <b style="color:var(--neon-blue);">Rs. ${lastRec.winAmount}</b>
+                        </div>
+                    `;
+                }
+            }
+
+            // Check if playing live
+            if(activeLiveSessions[selectedUser]) {
+                let session = activeLiveSessions[selectedUser];
+                
+                statusTxt.innerHTML = `
+                    <div style="font-size: 16px; margin-bottom: 5px;">Current Balance: <span style="color:var(--neon-green);">Rs. ${currentBalance}</span></div>
+                    🔴 <span style="color:var(--neon-red); font-weight:bold; animation: blink 1s infinite;">LIVE NOW</span><br>
+                    Active Bet: <span>Rs. ${session.bet}</span> | Mines: <span>${session.mines}</span>
+                    ${historyHtml}
+                `;
+                statusTxt.style.borderColor = "var(--neon-red)";
+                
+                let bombs = session.bombs || [];
+                let clicked = session.clicked || [];
+
+                for(let i = 0; i < 25; i++) {
+                    let cell = document.createElement('div');
+                    cell.className = "live-cell";
+                    
+                    if(bombs.includes(i)) {
+                        cell.classList.add('bomb');
+                        cell.innerHTML = "💣";
+                    } else if (clicked.includes(i)) {
+                        cell.classList.add('safe-clicked');
+                        cell.innerHTML = "💎";
+                    }
+                    grid.appendChild(cell);
+                }
+            } else {
+                statusTxt.innerHTML = `
+                    <div style="font-size: 16px; margin-bottom: 5px;">Current Balance: <span style="color:var(--neon-green);">Rs. ${currentBalance}</span></div>
+                    ⚪ <span style="color:#aaa;">User is currently OFFLINE (Not Playing)</span>
+                    ${historyHtml}
+                `;
+                statusTxt.style.borderColor = "#555";
+                
+                for(let i=0; i<25; i++) {
+                    let cell = document.createElement('div');
+                    cell.className = "live-cell";
+                    grid.appendChild(cell);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

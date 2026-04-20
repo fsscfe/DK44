@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DK44 - Support Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --bg: #070b14; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; --panel: rgba(0, 31, 24, 0.85); }
+        * { box-sizing: border-box; outline: none; }
+        
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('Rgbg.png'); 
+            background-size: cover; background-position: center; background-attachment: fixed; 
+            color: white; font-family: 'Segoe UI', Tahoma, sans-serif; 
+            margin: 0; padding: 0; padding-bottom: 20px; 
+            touch-action: manipulation;
+        }
+
+        .top-bar { background: rgba(0, 21, 16, 0.95); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        .back-btn { color: var(--gold); font-size: 22px; text-decoration: none; transition: 0.2s; }
+        .back-btn:active { transform: scale(0.9); }
+
+        .search-box { display: flex; align-items: center; background: #000; border: 1px solid var(--gold); border-radius: 5px; padding: 5px 15px; width: 300px; }
+        .search-box input { border: none; background: transparent; margin: 0; padding: 5px; width: 100%; color: white; font-size: 16px; }
+        
+        /* Notifications Panel */
+        .notif-bell { position: relative; cursor: pointer; margin-left: 15px; }
+        .notif-badge { position: absolute; top: -8px; right: -8px; background: var(--red); color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: bold; display: none; }
+        #notifDropdown { display: none; position: absolute; top: 60px; right: 20px; width: 320px; background: rgba(0, 21, 16, 0.95); border: 2px solid var(--gold); border-radius: 10px; max-height: 400px; overflow-y: auto; z-index: 200; box-shadow: 0 5px 15px rgba(0,0,0,0.7); }
+        .notif-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        .notif-item:hover { background: rgba(255, 215, 0, 0.1); }
+        .notif-unread { background: rgba(255, 215, 0, 0.15); border-left: 3px solid var(--gold); }
+
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .header-title { text-align: center; color: var(--gold); margin-top: 10px; margin-bottom: 25px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 25px; }
+        .card { background: var(--panel); padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        h2 { color: #00d2ff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; display: flex; justify-content: space-between; margin-top: 0; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #000; border: 1px solid var(--gold); color: white; border-radius: 5px; font-size: 16px; font-weight: bold; }
+        label { color: var(--gold); font-size: 14px; font-weight: bold; }
+
+        .btn { background: var(--gold); color: black; border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px; margin-bottom: 10px;}
+        .btn:active { transform: scale(0.97); }
+        .btn-red { background: var(--red); color: white; border: 1px solid #c0392b; }
+        .btn-blue { background: var(--blue); color: white; border: 1px solid #2980b9; }
+        .btn-green { background: var(--green); color: black; border: 1px solid #27ae60; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #333; font-size: 14px; }
+        th { background: #001F18; color: var(--gold); }
+        tr:hover td { background: rgba(255, 215, 0, 0.1); cursor: pointer;}
+
+        .badge { background: var(--red); color: white; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        
+        /* Modal Chat Styles */
+        #chatModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { width: 100%; max-width: 600px; background: #001510; border-radius: 15px; border: 2px solid var(--gold); display: flex; flex-direction: column; height: 90vh; }
+        .modal-header { padding: 15px; border-bottom: 1px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .close-modal { color: var(--red); background: none; border: none; font-size: 25px; cursor: pointer; }
+        
+        /* User Requests Area Inside Chat */
+        #userRequestsArea { background: rgba(0,0,0,0.8); padding: 10px 15px; border-bottom: 1px solid var(--gold); max-height: 150px; overflow-y: auto; }
+        .req-box { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 10px; border: 1px solid #444; border-radius: 5px; margin-bottom: 5px; }
+        .req-actions button { padding: 5px 10px; font-size: 12px; margin-left: 5px; border: none; border-radius: 3px; font-weight: bold; cursor: pointer; color: white;}
+        
+        #chatBox { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #efe7dd; }
+        .msg { max-width: 80%; padding: 10px; border-radius: 10px; font-size: 15px; color: black; word-wrap: break-word; position: relative; }
+        .msg.admin { background: #dcf8c6; align-self: flex-end; }
+        .msg.user { background: #ffffff; align-self: flex-start; border: 1px solid #ccc;}
+        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; cursor: pointer;}
+        .bot-tag { font-size: 10px; color: #888; display: block; margin-bottom: 4px; font-weight: bold; }
+        
+        .chat-input-area { display: flex; padding: 10px; background: #fff; gap: 10px; border-radius: 0 0 15px 15px; }
+        .chat-input-area input { flex: 1; margin: 0; color: #000; background: #f0f2f5; border: none; padding: 10px; border-radius: 20px; }
+        .chat-input-area button { width: 50px; border-radius: 50%; padding: 10px; margin: 0; }
+        
+        .reply-item { background: #000; padding: 10px; border: 1px solid #555; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h3 style="margin: 0; color: var(--gold);"><i class="fas fa-headset"></i> DK44 Admin</h3>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div class="search-box">
+                <i class="fas fa-search" style="color: var(--gold); margin-right: 8px;"></i>
+                <input type="text" id="searchInput" placeholder="Search Number..." onkeyup="window.filterUsers()">
+            </div>
+            
+            <!-- Notification Bell -->
+            <div class="notif-bell" onclick="window.toggleNotifications()">
+                <i class="fas fa-bell" style="color: var(--gold); font-size: 24px;"></i>
+                <span id="notifBadge" class="notif-badge">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Dropdown -->
+    <div id="notifDropdown">
+        <h4 style="margin: 0; padding: 12px; background: #000; color: var(--gold); border-bottom: 1px solid var(--gold); text-align: center;">Live Notifications</h4>
+        <div id="notifList"></div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Smart Auto-Reply Configuration -->
+        <div class="card" style="border: 2px solid var(--gold); margin-bottom: 25px;">
+            <h2><span>🤖 Smart Auto-Reply System</span></h2>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>Keyword (مثلاً: Withdrawal)</label>
+                    <input type="text" id="ar-keyword" placeholder="Enter keyword">
+                </div>
+                <div style="flex: 2;">
+                    <label>Auto Reply Message (جواب)</label>
+                    <input type="text" id="ar-message" placeholder="Enter automatic response">
+                </div>
+            </div>
+            <button class="btn btn-blue" onclick="window.addAutoReply()"><i class="fas fa-plus"></i> Save Auto-Reply</button>
+            <div id="autoReplyList" style="margin-top: 15px; max-height: 150px; overflow-y: auto;"></div>
+        </div>
+
+        <div class="grid">
+            <!-- Active Chats -->
+            <div class="card" style="border: 2px solid var(--green);">
+                <h2><span>🟢 Active / New Chats</span> <b id="activeCount" style="color: white; font-size: 16px;">0</b></h2>
+                <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead><tr><th>User Info</th><th>Last Message</th><th>Action</th></tr></thead>
+                        <tbody id="activeChatsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Ended / Timeout -->
+            <div class="card" style="border: 2px solid var(--red);">
+                <h2><span>🔴 Ended / Timeout (30 Min)</span> <b id="endedCount" style="color: white; font-size: 16px;">0</b></h2>
+                <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead><tr><th>User Info</th><th>Time Passed</th><th>Action</th></tr></thead>
+                        <tbody id="endedChatsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Chat Modal -->
+    <div id="chatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 id="chatUserName" style="margin: 0; color: var(--gold);">User Name</h3>
+                    <small id="chatUserStatus" style="color: #aaa;">Online</small>
+                </div>
+                <button class="close-modal" onclick="window.closeChat()"><i class="fas fa-times-circle"></i></button>
+            </div>
+            
+            <!-- User Requests Management Area -->
+            <div id="userRequestsArea">
+                <!-- Requests injected here via JS -->
+            </div>
+            
+            <div id="chatBox">
+                <!-- Messages load here -->
+            </div>
+            
+            <div style="padding: 0 10px; background: #fff;">
+                <button class="btn btn-red" style="margin: 5px 0; padding: 8px;" onclick="window.endChat()"><i class="fas fa-ban"></i> End Chat & Move to Timeout</button>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="adminReplyInput" placeholder="Type manual reply here...">
+                <button class="btn btn-blue" onclick="window.sendAdminMsg()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Sound -->
+    <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260", authDomain: "eagle-trading-81262.firebaseapp.com", databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com", projectId: "eagle-trading-81262" };
+    const app = initializeApp(firebaseConfig); 
+    const db = getDatabase(app);
+
+    let activeUserId = null;
+    let allChatsData = {};
+    let autoReplies = {};
+    let initialLoad = true;
+    let prevNotifCount = 0;
+
+    // --- Notifications Logic (from Client Bot) ---
+    window.toggleNotifications = () => {
+        let panel = document.getElementById('notifDropdown');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    };
+
+    onValue(ref(db, 'admin_notifications'), snap => {
+        let data = snap.val() || {};
+        let unreadCount = 0;
+        let listHTML = "";
+        
+        let notifArray = Object.keys(data).map(k => ({id:k, ...data[k]})).sort((a,b) => b.time - a.time);
+
+        notifArray.forEach(notif => {
+            if(notif.status === 'unread') unreadCount++;
+            let timeStr = new Date(notif.time).toLocaleTimeString();
+            let unreadClass = notif.status === 'unread' ? 'notif-unread' : '';
+            
+            listHTML += `<div class="notif-item ${unreadClass}" onclick="window.openChatFromNotif('${notif.uID}', '${notif.id}')">
+                <div style="color:var(--gold); font-weight:bold; font-size:14px;">📱 ${notif.phoneNumber || 'User'}</div>
+                <div style="color:#ddd; font-size:13px; margin:4px 0;">${notif.action}</div>
+                <div style="color:#888; font-size:11px;">🕒 ${timeStr}</div>
+            </div>`;
+        });
+        
+        document.getElementById('notifList').innerHTML = listHTML || `<div style="padding:15px; text-align:center; color:#888;">No Notifications</div>`;
+        
+        let badge = document.getElementById('notifBadge');
+        if(unreadCount > 0) {
+            badge.innerText = unreadCount;
+            badge.style.display = 'block';
+            // Play sound if new notification arrives
+            if(unreadCount > prevNotifCount && !initialLoad) {
+                document.getElementById('notifySound').play().catch(e => console.log(e));
+            }
+        } else {
+            badge.style.display = 'none';
+        }
+        prevNotifCount = unreadCount;
+    });
+
+    window.openChatFromNotif = (uID, notifId) => {
+        // Mark notif as read
+        update(ref(db, `admin_notifications/${notifId}`), { status: 'read' });
+        window.openChat(uID);
+        document.getElementById('notifDropdown').style.display = 'none';
+    };
+
+
+    // --- Load Auto Replies ---
+    onValue(ref(db, 'admin_settings/auto_replies'), snap => {
+        autoReplies = snap.val() || {};
+        const list = document.getElementById('autoReplyList');
+        list.innerHTML = "";
+        for(let key in autoReplies) {
+            list.innerHTML += `<div class="reply-item">
+                <span><b>${key}</b>: ${autoReplies[key]}</span>
+                <i class="fas fa-trash" style="color:var(--red); cursor:pointer;" onclick="window.delAutoReply('${key}')"></i>
+            </div>`;
+        }
+    });
+
+    window.addAutoReply = () => {
+        let kw = document.getElementById('ar-keyword').value.trim().toLowerCase();
+        let msg = document.getElementById('ar-message').value.trim();
+        if(!kw || !msg) return alert("Please fill both fields!");
+        set(ref(db, `admin_settings/auto_replies/${kw}`), msg);
+        document.getElementById('ar-keyword').value = ""; document.getElementById('ar-message').value = "";
+    };
+
+    window.delAutoReply = (key) => { remove(ref(db, `admin_settings/auto_replies/${key}`)); };
+
+    // --- Load Chats Data ---
+    onValue(ref(db, 'chats'), snap => {
+        allChatsData = snap.val() || {};
+        renderTables(allChatsData);
+
+        if(!initialLoad) {
+            for(let id in allChatsData) {
+                if(allChatsData[id].info && allChatsData[id].info.status === 'unread') {
+                    document.getElementById('notifySound').play().catch(e => console.log(e));
+                    break;
+                }
+            }
+        }
+        initialLoad = false;
+    });
+
+    function renderTables(data) {
+        const activeTable = document.getElementById('activeChatsTable');
+        const endedTable = document.getElementById('endedChatsTable');
+        activeTable.innerHTML = ""; endedTable.innerHTML = "";
+        let actCount = 0, endCount = 0;
+        let currentTime = Date.now();
+        let query = document.getElementById('searchInput').value.toLowerCase();
+
+        for(let uID in data) {
+            let info = data[uID].info;
+            if(!info) continue;
+            
+            if(info.name && !info.name.toLowerCase().includes(query)) continue;
+
+            let timeDiff = currentTime - (info.time || 0);
+            let isTimeout = timeDiff > 1800000 || info.status === 'ended'; // 30 min timeout
+
+            let shortMsg = info.last ? info.last.substring(0, 25) + "..." : "Attachment";
+            let badge = info.status === 'unread' ? `<span class="badge">New</span>` : "";
+
+            let tr = `<tr onclick="window.openChat('${uID}')">
+                <td style="color:var(--gold); font-weight:bold;">${info.name} ${badge}</td>
+                <td>${shortMsg}</td>
+                <td><button class="btn btn-blue" style="padding:5px; margin:0;"><i class="fas fa-reply"></i> Open</button></td>
+            </tr>`;
+
+            if(isTimeout) {
+                endCount++;
+                let minsPassed = Math.floor(timeDiff / 60000);
+                let timeText = info.status === 'ended' ? "Ended" : `${minsPassed}m ago`;
+                endedTable.innerHTML += tr.replace(shortMsg, `<span style="color:#aaa;">${timeText}</span>`);
+            } else {
+                actCount++;
+                activeTable.innerHTML += tr;
+
+                // Smart Auto Reply Checker
+                if(info.status === 'unread') {
+                    checkAndSendAutoReply(uID, info.last);
+                }
+            }
+        }
+        document.getElementById('activeCount').innerText = actCount;
+        document.getElementById('endedCount').innerText = endCount;
+    }
+
+    window.filterUsers = () => renderTables(allChatsData);
+
+    function checkAndSendAutoReply(uID, lastMsg) {
+        if(!lastMsg) return;
+        let lowerMsg = lastMsg.toLowerCase();
+        for(let keyword in autoReplies) {
+            if(lowerMsg.includes(keyword)) {
+                push(ref(db, `chats/${uID}/messages`), {
+                    sender: 'admin', content: autoReplies[keyword], type: 'text', time: Date.now()
+                });
+                update(ref(db, `chats/${uID}/info`), { status: 'replied' });
+                break; 
+            }
+        }
+    }
+
+    // --- Chat & Request Management ---
+    let chatListener = null;
+    let reqListener = null;
+
+    window.openChat = (uID) => {
+        activeUserId = uID;
+        let info = allChatsData[uID]?.info || {name: "Unknown"};
+        document.getElementById('chatUserName').innerText = info.name;
+        document.getElementById('chatModal').style.display = 'flex';
+        
+        update(ref(db, `chats/${uID}/info`), { status: 'read' });
+
+        const box = document.getElementById('chatBox');
+        box.innerHTML = "";
+
+        // 1. Listen for Messages
+        if(chatListener) chatListener(); 
+        chatListener = onValue(ref(db, `chats/${uID}/messages`), snap => {
+            box.innerHTML = "";
+            let msgs = snap.val();
+            for(let key in msgs) {
+                let m = msgs[key];
+                let isAdmin = m.sender === 'admin';
+                
+                // Display content based on type (Options vs Image vs Text)
+                let contentHTML = "";
+                if(m.type === 'image') {
+                    contentHTML = `<img src="${m.content}" onclick="window.open('${m.content}', '_blank')">`;
+                } else if(m.type === 'options') {
+                    contentHTML = `<span class="bot-tag">🤖 Automated Bot Options Sent:</span><b>${m.content}</b><br><small style="color:#555;">[${m.options}]</small>`;
+                } else {
+                    contentHTML = m.content;
+                }
+
+                box.innerHTML += `<div class="msg ${isAdmin ? 'admin' : 'user'}">${contentHTML}</div>`;
+            }
+            box.scrollTop = box.scrollHeight;
+        });
+
+        // 2. Listen for User Requests (Deposit/Withdrawal)
+        const reqArea = document.getElementById('userRequestsArea');
+        if(reqListener) reqListener();
+        reqListener = onValue(ref(db, `requests/${uID}`), snap => {
+            let reqHTML = `<div style="color:var(--gold); font-size:14px; font-weight:bold; margin-bottom:5px;">💳 User Live Requests:</div>`;
+            if(snap.exists()) {
+                let data = snap.val();
+                for(let key in data) {
+                    let r = data[key];
+                    let dateStr = new Date(r.time || Date.now()).toLocaleString();
+                    
+                    let statusColor = r.status === 'accepted' ? 'var(--green)' : (r.status === 'returned' ? 'var(--red)' : '#f39c12');
+                    
+                    reqHTML += `
+                    <div class="req-box">
+                        <div>
+                            <span style="color:#00d2ff; font-weight:bold;">${r.type}</span> | <b>Rs ${r.amount}</b><br>
+                            <small style="color:#aaa;">${dateStr}</small><br>
+                            <small style="color:${statusColor}; font-weight:bold;">Status: ${r.status ? r.status.toUpperCase() : 'PENDING'}</small>
+                        </div>
+                        <div class="req-actions">
+                            <button style="background:var(--green);" onclick="window.changeReqStatus('${uID}', '${key}', 'accepted')">✔ Pass</button>
+                            <button style="background:var(--red);" onclick="window.changeReqStatus('${uID}', '${key}', 'returned')">✖ Return</button>
+                            <button style="background:#555;" onclick="window.changeReqStatus('${uID}', '${key}', 'pending')">⏳ Pen</button>
+                        </div>
+                    </div>`;
+                }
+            } else {
+                reqHTML += `<small style="color:#888;">No active deposit/withdrawal requests found.</small>`;
+            }
+            reqArea.innerHTML = reqHTML;
+        });
+    };
+
+    // --- Change Request Status Function ---
+    window.changeReqStatus = (uID, reqKey, newStatus) => {
+        if(confirm(`Are you sure you want to change status to ${newStatus.toUpperCase()}?`)) {
+            update(ref(db, `requests/${uID}/${reqKey}`), { status: newStatus });
+            // Send an automated chat message informing admin of their action
+            push(ref(db, `chats/${uID}/messages`), { 
+                sender: 'admin', 
+                content: `(System Note: Admin changed request status to ${newStatus.toUpperCase()})`, 
+                type: 'text', 
+                time: Date.now() 
+            });
+        }
+    };
+
+    window.sendAdminMsg = () => {
+        let text = document.getElementById('adminReplyInput').value.trim();
+        if(!text || !activeUserId) return;
+
+        push(ref(db, `chats/${activeUserId}/messages`), { sender: 'admin', content: text, type: 'text', time: Date.now() });
+        update(ref(db, `chats/${activeUserId}/info`), { status: 'replied', last: text, time: Date.now() });
+        
+        document.getElementById('adminReplyInput').value = "";
+    };
+
+    document.getElementById('adminReplyInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') window.sendAdminMsg();
+    });
+
+    window.endChat = () => {
+        if(!activeUserId) return;
+        update(ref(db, `chats/${activeUserId}/info`), { status: 'ended' });
+        window.closeChat();
+    };
+
+    window.closeChat = () => {
+        document.getElementById('chatModal').style.display = 'none';
+        activeUserId = null;
+        if(chatListener) chatListener();
+        if(reqListener) reqListener();
+    };
+</script>
+</body>
+</html>

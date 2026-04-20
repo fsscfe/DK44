@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aviator VIP - Pro Admin Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --bg: #070b14; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; --panel: rgba(0, 31, 24, 0.85); }
+        * { box-sizing: border-box; outline: none; }
+        
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('Rgbg.png'); 
+            background-size: cover; background-position: center; background-attachment: fixed; 
+            color: white; font-family: 'Segoe UI', Tahoma, sans-serif; 
+            margin: 0; padding: 0; padding-bottom: 20px; 
+            touch-action: manipulation; 
+        }
+
+        .top-bar { background: rgba(0, 21, 16, 0.95); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .back-btn { color: var(--gold); font-size: 22px; text-decoration: none; transition: 0.2s; }
+        .back-btn:active { transform: scale(0.9); }
+
+        .search-box { display: flex; align-items: center; background: #000; border: 1px solid var(--gold); border-radius: 5px; padding: 5px 15px; width: 300px; }
+        .search-box input { border: none; background: transparent; margin: 0; padding: 5px; width: 100%; color: white; font-size: 16px; }
+        
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .header-title { text-align: center; color: var(--gold); margin-top: 10px; margin-bottom: 25px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; }
+        
+        /* 🔴 LIVE STATUS SECTION */
+        .live-section { background: rgba(0, 0, 0, 0.9); border: 2px solid var(--red); border-radius: 12px; padding: 25px; margin-bottom: 25px; text-align: center; box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); }
+        .live-section h3 { margin: 0 0 10px 0; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; }
+        #livePlaneStatus { font-size: 60px; font-weight: 900; color: #fff; margin: 10px 0; text-shadow: 0 0 15px #fff; }
+        .history-strip { display: flex; gap: 5px; justify-content: center; margin-top: 15px; overflow: hidden;}
+        .h-item { font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 5px; background: #222; border: 1px solid #444; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 25px; }
+        .card { background: var(--panel); padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        h2 { color: #00d2ff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; display: flex; justify-content: space-between; margin-top: 0; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #000; border: 1px solid var(--gold); color: white; border-radius: 5px; font-size: 16px; font-weight: bold; }
+        label { color: var(--gold); font-size: 14px; font-weight: bold; }
+
+        .btn { background: var(--gold); color: black; border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-size: 15px; }
+        .btn:active { transform: scale(0.97); }
+        .btn-red { background: var(--red); color: white; border: 1px solid #c0392b; }
+        .btn-blue { background: var(--blue); color: white; border: 1px solid #2980b9; }
+        .btn-green { background: var(--green); color: black; border: 1px solid #27ae60; }
+
+        /* 👥 USERS TABLE */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; }
+        th, td { text-align: center; padding: 12px 8px; border-bottom: 1px solid #333; font-size: 14px; vertical-align: middle; }
+        th { background: #001F18; color: var(--gold); font-size: 12px; text-transform: uppercase; }
+        tr:hover td { background: rgba(255, 215, 0, 0.1); }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-active { background: rgba(46, 204, 113, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .status-online { background: rgba(52, 152, 219, 0.2); color: var(--blue); border: 1px solid var(--blue); }
+        .status-offline { background: rgba(231, 76, 60, 0.2); color: var(--red); border: 1px solid var(--red); }
+        
+        .live-cell { font-family: monospace; font-size: 16px; font-weight: bold; }
+        .live-waiting { color: #888; font-size: 12px; }
+        .live-flying { color: var(--green); text-shadow: 0 0 5px var(--green); }
+        .live-crashed { color: var(--red); }
+
+        /* MODAL */
+        #userModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; overflow-y: auto; z-index: 1000; backdrop-filter: blur(5px);}
+        .modal-content { max-width: 600px; margin: 20px auto; background: #001510; padding: 20px; border-radius: 15px; border: 2px solid var(--gold); }
+        .close-modal { float:right; color:var(--red); border:none; background:none; font-size:25px; cursor: pointer; }
+        .pending-box { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 5px; font-family: monospace; font-size: 14px; color: #fff; margin-top: 5px; display: inline-block; width: 100%; word-break: break-all; }
+
+        .mode-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.3s; background: #001F18; color: #aaa; }
+        .mode-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h3 style="margin: 0; color: var(--gold);"><i class="fas fa-shield-alt"></i> Admin Panel</h3>
+        </div>
+        <div class="search-box">
+            <i class="fas fa-search" style="color: var(--gold); margin-right: 8px;"></i>
+            <input type="text" id="searchUser" placeholder="Search User Phone..." onkeyup="window.filterUsers()">
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="header-title"><i class="fas fa-plane-departure"></i> DK44 - PRO AVIATOR ADMIN</h1>
+
+        <!-- 🔴 LIVE GLOBAL MONITOR -->
+        <div class="live-section">
+            <h3><i class="fas fa-satellite-dish" style="color:var(--green)"></i> Global Live Monitor</h3>
+            <div id="livePlaneStatus">WAITING...</div>
+            <button class="btn btn-red" style="padding: 15px; font-size: 18px; border-radius: 10px; margin-bottom: 10px; max-width: 400px; margin-left: auto; margin-right: auto;" onclick="window.emergencyCrashAll()">
+                <i class="fas fa-bolt"></i> CRASH ALL ACTIVE PLAYERS
+            </button>
+            <p style="margin:0; color:#aaa; font-size: 14px;">Last Crashed At: <span id="liveLastCrash" style="color: var(--red); font-weight: bold; font-size: 16px;">1.00x</span></p>
+            <div class="history-strip" id="admin-history"></div>
+        </div>
+
+        <div class="grid">
+            <!-- 🔵 SYSTEM MODE -->
+            <div class="card" style="border: 2px solid var(--blue);">
+                <h2><span>⚙️ Operation Mode</span></h2>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" id="btnAuto" onclick="window.setMode('AUTO')">
+                        <i class="fas fa-robot"></i> AUTO MODE
+                    </button>
+                    <button class="mode-btn" id="btnManual" onclick="window.setMode('MANUAL')">
+                        <i class="fas fa-hand-paper"></i> MANUAL MODE
+                    </button>
+                </div>
+                <p style="font-size:12px; color:#aaa; margin:0;">Auto mode me 3x wali game logic chalegi. Manual mode me sab rules aapke mutabiq (setup se) chalenge.</p>
+            </div>
+
+            <!-- 🟡 GLOBAL PERCENTAGE (MANUAL SETTINGS) -->
+            <div class="card" style="border: 2px solid var(--gold);">
+                <h2><span>📊 Global Win Limit</span></h2>
+                <label>Set Win Limit For All Users</label>
+                <select id="global_percent">
+                    <option value="10">10% - Strict Limit (Max 1.50x)</option>
+                    <option value="20">20% - Hard Limit (Max 2.00x)</option>
+                    <option value="50">50% - Medium Limit (Max 10.0x)</option>
+                    <option value="100">100% - Unlimited Play (Normal)</option>
+                </select>
+                <button class="btn btn-gold" onclick="window.setGlobalPercent()">
+                    <i class="fas fa-check-circle"></i> APPLY TO ALL USERS
+                </button>
+            </div>
+        </div>
+
+        <!-- 👥 INDIVIDUAL USERS TABLE (LIVE) -->
+        <div class="card" style="border: 1px solid #004D40;">
+            <h2><span>👥 Individual Users Data & Actions</span> <span style="font-size: 14px; color: white;">Total: <b id="totalUsers" style="color: var(--gold);">0</b></span></h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">User Phone</th>
+                            <th>Status</th>
+                            <th>Live Game</th>
+                            <th>P/L</th>
+                            <th style="width: 180px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable">
+                        <tr><td colspan="5">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎛️ INDIVIDUAL USER SETUP MODAL -->
+    <div id="userModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="window.closeModal()"><i class="fas fa-times-circle"></i></button>
+            <h2 style="color: var(--gold); margin-bottom: 5px;"><i class="fas fa-user-cog"></i> Setup: <span id="m_phone">0000</span></h2>
+            <hr style="border: 1px solid #333; margin-bottom: 20px;">
+
+            <!-- Financials -->
+            <div style="display:flex; justify-content:space-between; background:#000; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #333;">
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#888;">Deposit</div>
+                    <div style="font-weight:bold; color:#fff;" id="m_dep">0</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#888;">Admin P/L</div>
+                    <div style="font-weight:bold;" id="m_pl">0</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#888;">Balance</div>
+                    <div style="font-weight:bold; color:var(--gold);" id="m_bal">0</div>
+                </div>
+            </div>
+
+            <!-- INDIVIDUAL WIN LIMIT -->
+            <div style="background: #000; padding: 15px; border-radius: 8px; border: 1px dashed var(--gold); margin-bottom: 15px;">
+                <label>Strict Win Percentage (For This User)</label>
+                <select id="m_percent">
+                    <option value="10">10% - Strict Limit (Max 1.50x)</option>
+                    <option value="20">20% - Hard Limit (Max 2.00x)</option>
+                    <option value="50">50% - Medium Limit (Max 10.0x)</option>
+                    <option value="100">100% - Unlimited Play (Normal)</option>
+                </select>
+                <button class="btn btn-gold" onclick="window.setUserPercent()">APPLY LIMIT TO USER</button>
+            </div>
+            
+            <!-- 🚀 INDIVIDUAL ROUND / SEQUENCE SETTER -->
+            <div style="background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--green);">
+                <label style="color:var(--green);"><i class="fas fa-stream"></i> Set Rounds Sequence (Har User Alag)</label>
+                <p style="font-size:11px; color:#aaa; margin:5px 0 10px 0;">
+                    Comma laga kar rounds enter karein. <i>Example: 1.5, 2.0, 1.1, 5.0</i>
+                </p>
+                <input type="text" id="m_sequence" placeholder="Example: 1.2, 5.0, 1.1">
+                <button class="btn btn-green" onclick="window.setUserSequence()">SAVE ROUNDS FOR THIS USER</button>
+                
+                <div style="margin-top: 15px;">
+                    <span style="color:#aaa; font-size:12px;">Pending Rounds:</span>
+                    <button class="btn btn-red" style="padding:4px 8px; width:auto; font-size:10px; margin:0; float:right;" onclick="window.clearUserSequence()">Delete Sequence</button>
+                    <div id="m_pending_rounds" class="pending-box">None</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260", authDomain: "eagle-trading-81262.firebaseapp.com", databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com", projectId: "eagle-trading-81262", storageBucket: "eagle-trading-81262.firebasestorage.app", messagingSenderId: "996540768145", appId: "1:996540768145:web:76304ad1ffe78d45780430" };
+    const app = initializeApp(firebaseConfig); const db = getDatabase(app);
+
+    let allUsersData = {};
+    let activeModalUser = null;
+
+    // --- 1. LIVE GLOBAL STATUS ---
+    onValue(ref(db, 'game_sync/live_status'), snap => {
+        if(snap.exists()) {
+            const data = snap.val();
+            const display = document.getElementById('livePlaneStatus');
+            if(data.state === 'WAITING') {
+                display.innerText = "WAITING..."; display.style.color = "#fff"; display.style.textShadow = "0 0 10px #fff";
+            } else if (data.state === 'FLYING') {
+                display.innerText = data.x + "x"; display.style.color = "var(--green)"; display.style.textShadow = "0 0 20px var(--green)";
+            } else if (data.state === 'CRASHED') {
+                display.innerText = "CRASHED @ " + data.x + "x"; display.style.color = "var(--red)"; display.style.textShadow = "0 0 20px var(--red)";
+            }
+        }
+    });
+
+    onValue(ref(db, 'game_sync/global_history'), snap => {
+        const hist = snap.val();
+        if(hist && hist.length > 0) {
+            let latest = hist[hist.length - 1];
+            document.getElementById('liveLastCrash').innerText = latest.toFixed(2) + "x";
+            const el = document.getElementById('admin-history'); el.innerHTML = "";
+            hist.slice(-8).forEach(v => {
+                let s = document.createElement('span'); 
+                let c = v >= 10 ? "color:#e91e63" : (v >= 2 ? "color:#9b59b6" : "color:#3498db");
+                s.className = `h-item`; s.style = c; s.innerText = v.toFixed(2) + "x"; el.prepend(s);
+            });
+        }
+    });
+
+    window.emergencyCrashAll = () => {
+        if(confirm("DANGER: Kya aap tamam live jahaz giraana chahte hain?")) {
+            for(let phone in allUsersData) {
+                if(allUsersData[phone].status === 'Active') {
+                    update(ref(db, `users/${phone}/admin_control`), { instantKill: true });
+                }
+            }
+            // Add global safety kill too
+            update(ref(db, 'admin_settings/aviator_control'), { emergencyCrash: true });
+            setTimeout(() => { update(ref(db, 'admin_settings/aviator_control/emergencyCrash'), false); }, 2000);
+            alert("Crash Signal Sent to All!");
+        }
+    };
+
+    // --- 2. SYSTEM MODE ---
+    onValue(ref(db, 'admin_settings/master/mode'), snap => {
+        let mode = snap.exists() ? snap.val() : 'AUTO';
+        if(mode === 'AUTO') {
+            document.getElementById('btnAuto').className = "mode-btn active";
+            document.getElementById('btnManual').className = "mode-btn";
+        } else {
+            document.getElementById('btnManual').className = "mode-btn active";
+            document.getElementById('btnAuto').className = "mode-btn";
+        }
+    });
+
+    window.setMode = (mode) => update(ref(db, 'admin_settings/master'), { mode: mode });
+
+    window.setGlobalPercent = () => {
+        let pct = parseInt(document.getElementById('global_percent').value);
+        if(confirm(`Apply ${pct}% Win Limit to ALL users?`)) {
+            let updates = {};
+            for(let phone in allUsersData) { updates[`users/${phone}/admin_control/winPercentage`] = pct; }
+            if(Object.keys(updates).length > 0) { update(ref(db), updates).then(() => alert(`Applied to all!`)); }
+        }
+    };
+
+    // --- 3. INDIVIDUAL INSTANT CRASH ---
+    window.instantCrashUser = (phone) => {
+        update(ref(db, `users/${phone}/admin_control`), { instantKill: true })
+            .catch(err => alert("Error: " + err.message));
+        
+        let btn = document.getElementById('crash-btn-' + phone);
+        if(btn) {
+            btn.innerHTML = "<i class='fas fa-check'></i>"; btn.style.background = "#e67e22";
+            setTimeout(() => { btn.innerHTML = "<i class='fas fa-bomb'></i> CRASH"; btn.style.background = "var(--red)"; }, 1000);
+        }
+    };
+
+    // --- 4. USERS TABLE ---
+    onValue(ref(db, 'users'), snap => { 
+        allUsersData = snap.val() || {}; 
+        window.filterUsers(); 
+        if(activeModalUser && allUsersData[activeModalUser]) {
+            updateModalLiveRounds(allUsersData[activeModalUser]);
+        }
+    });
+
+    window.filterUsers = () => {
+        const query = document.getElementById('searchUser').value.toLowerCase();
+        const table = document.getElementById('userTable'); table.innerHTML = ""; 
+        let count = 0; let currentTime = Date.now();
+
+        for (let phone in allUsersData) {
+            let u = allUsersData[phone];
+            let showUser = false; let statusText = ""; let statusClass = "";
+
+            if(u.status === 'Active') { showUser = true; statusText = "Active"; statusClass = "status-active"; }
+            else if (u.status === 'Online') { showUser = true; statusText = "Online"; statusClass = "status-online"; }
+            else { 
+                let lastSeen = u.lastSeen || 0;
+                if((currentTime - lastSeen) <= 600000) { showUser = true; statusText = "Offline"; statusClass = "status-offline"; }
+            }
+
+            if(showUser && phone.toLowerCase().includes(query)) {
+                count++;
+                let liveHTML = "";
+                if(u.livePlaneState === 'FLYING') liveHTML = `<span class="live-cell live-flying">${(u.livePlaneMulti || 1.00).toFixed(2)}x <i class="fas fa-plane"></i></span>`;
+                else if(u.livePlaneState === 'CRASHED') liveHTML = `<span class="live-cell live-crashed">${(u.livePlaneMulti || 1.00).toFixed(2)}x 💥</span>`;
+                else liveHTML = `<span class="live-cell live-waiting">Waiting...</span>`;
+
+                let adminProfit = (parseFloat(u.totalLoss || 0) - parseFloat(u.totalWin || 0)).toFixed(2);
+                let pColor = adminProfit >= 0 ? "var(--green)" : "var(--red)";
+
+                table.innerHTML += `
+                    <tr>
+                        <td style="text-align: left; font-family: monospace; font-size: 14px;">${phone}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${liveHTML}</td>
+                        <td style="color:${pColor}; font-weight:bold;">${adminProfit}</td>
+                        <td>
+                            <div style="display:flex; gap:5px; justify-content:center;">
+                                <button id="crash-btn-${phone}" class="btn btn-red" style="padding: 6px 10px; margin:0; flex: 1.5; font-size:12px; border:none;" onclick="window.instantCrashUser('${phone}')">
+                                    <i class="fas fa-bomb"></i> CRASH
+                                </button>
+                                <button class="btn btn-blue" style="padding: 6px 10px; margin:0; flex: 1; font-size:12px; border:none;" onclick="window.openModal('${phone}')">
+                                    <i class="fas fa-cog"></i> SETUP
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        document.getElementById('totalUsers').innerText = count;
+        if(count === 0) table.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No valid users found.</td></tr>";
+    };
+
+    // --- 5. MODAL LOGIC ---
+    window.openModal = (phone) => {
+        activeModalUser = phone;
+        document.getElementById('m_phone').innerText = phone;
+        let u = allUsersData[phone] || {};
+        
+        document.getElementById('m_dep').innerText = parseFloat(u.totalDeposit || 0).toFixed(2);
+        document.getElementById('m_bal').innerText = parseFloat(u.balance || 0).toFixed(2);
+        
+        let adminProfit = (parseFloat(u.totalLoss || 0) - parseFloat(u.totalWin || 0)).toFixed(2);
+        let plEl = document.getElementById('m_pl');
+        plEl.innerText = adminProfit; plEl.style.color = adminProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+        document.getElementById('m_percent').value = (u.admin_control && u.admin_control.winPercentage) ? u.admin_control.winPercentage : "10";
+        document.getElementById('m_sequence').value = "";
+        updateModalLiveRounds(u);
+        document.getElementById('userModal').style.display = 'block';
+    };
+
+    function updateModalLiveRounds(userData) {
+        let seq = (userData.admin_control && userData.admin_control.targetedCrashSequence) ? userData.admin_control.targetedCrashSequence : [];
+        if(seq.length > 0) {
+            document.getElementById('m_pending_rounds').innerText = seq.map(v => v + "x").join(" ➔ ");
+            document.getElementById('m_pending_rounds').style.color = "var(--gold)";
+        } else {
+            document.getElementById('m_pending_rounds').innerText = "Koi round pending nahi.";
+            document.getElementById('m_pending_rounds').style.color = "#888";
+        }
+    }
+
+    window.closeModal = () => { activeModalUser = null; document.getElementById('userModal').style.display = 'none'; };
+
+    window.setUserPercent = () => {
+        if(!activeModalUser) return;
+        let pct = parseInt(document.getElementById('m_percent').value);
+        update(ref(db, `users/${activeModalUser}/admin_control`), { winPercentage: pct });
+        alert(`User win limit updated!`);
+    };
+
+    window.setUserSequence = () => {
+        if(!activeModalUser) return;
+        let inputVal = document.getElementById('m_sequence').value;
+        if(!inputVal.trim()) return alert("Please enter at least one value!");
+
+        let sequenceArray = inputVal.split(',').map(val => parseFloat(val.trim())).filter(val => !isNaN(val) && val >= 1.0);
+        if(sequenceArray.length === 0) return alert("Invalid format. Use: 1.5, 2.0, 1.1");
+
+        update(ref(db, `users/${activeModalUser}/admin_control`), { targetedCrashSequence: sequenceArray })
+            .then(() => {
+                alert(`Saved ${sequenceArray.length} rounds!`);
+                document.getElementById('m_sequence').value = "";
+            });
+    };
+
+    window.clearUserSequence = () => {
+        if(!activeModalUser) return;
+        if(confirm("Delete pending rounds for this user?")) {
+            update(ref(db, `users/${activeModalUser}/admin_control`), { targetedCrashSequence: null });
+        }
+    };
+</script>
+</body>
+</html>

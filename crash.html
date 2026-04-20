@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FLY X - Pro Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --bg: #070b14; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; --panel: rgba(17, 17, 17, 0.9); }
+        * { box-sizing: border-box; outline: none; }
+
+        body { background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; padding-bottom: 20px; touch-action: manipulation; }
+
+        .top-bar { background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff6b00; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2); }
+        
+        /* Back Button CSS Add kiya hai */
+        .back-btn { color: #ffb400; font-size: 22px; text-decoration: none; transition: 0.2s; }
+        .back-btn:active { transform: scale(0.9); }
+        
+        .search-box { display: flex; align-items: center; background: #000; border: 1px solid #ff6b00; border-radius: 5px; padding: 5px 15px; width: 300px; }
+        .search-box input { border: none; background: transparent; margin: 0; padding: 5px; width: 100%; color: white; font-size: 16px; }
+        
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .header-title { text-align: center; color: #ffb400; margin-top: 10px; margin-bottom: 25px; font-size: 28px; text-transform: uppercase; font-style: italic; border-bottom: 1px dashed #ffb400; padding-bottom: 10px; }
+        
+        .live-section { background: #0a0a0a; border: 2px solid var(--red); border-radius: 12px; padding: 25px; margin-bottom: 25px; text-align: center; box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); position: relative; overflow: hidden;}
+        .live-section h3 { margin: 0 0 10px 0; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; }
+        #livePlaneStatus { font-size: 60px; font-weight: 900; color: #fff; margin: 10px 0; text-shadow: 0 0 15px #fff; }
+        
+        .server-badge { position: absolute; top: 10px; right: 10px; background: #11aa11; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; color: white; display: none; box-shadow: 0 0 10px #11aa11;}
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 25px; }
+        .card { background: var(--panel); padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); border: 1.5px solid #2a2a2a; }
+        h2 { color: #34b4ff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; display: flex; justify-content: space-between; margin-top: 0; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #000; border: 1px solid #ff6b00; color: white; border-radius: 5px; font-size: 16px; font-weight: bold; }
+        label { color: #ffb400; font-size: 14px; font-weight: bold; }
+
+        .quick-btns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 15px; }
+        .quick-btns button { flex: 1; min-width: 50px; background: #111; color: #ffb400; border: 1px solid #ffb400; padding: 10px; border-radius: 5px; cursor: pointer; transition: 0.2s; font-weight: bold; font-size: 14px;}
+        .quick-btns button:hover { background: #ffb400; color: black; }
+
+        .btn { background: #ffb400; color: black; border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-size: 15px; }
+        .btn:active { transform: scale(0.97); }
+        .btn-red { background: var(--red); color: white; border: 1px solid #c0392b; }
+        .btn-blue { background: var(--blue); color: white; border: 1px solid #2980b9; }
+        .btn-green { background: #11aa11; color: white; border: 1px solid #0a8a0a; }
+        .btn-purple { background: #9b59b6; color: white; border: 1px solid #8e44ad; }
+        .btn-half { width: 48%; display: inline-block; }
+
+        .status-box { background: #000; padding: 12px; border-radius: 8px; border: 1px dashed #555; font-size: 14px; color: #ccc; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* 🌟 LIVE TRACK BOX (New Feature) */
+        .live-track-box { display: flex; align-items: center; justify-content: center; gap: 10px; background: #000; padding: 15px; border-radius: 8px; border: 1px solid #ffb400; margin-bottom: 15px; overflow-x: auto; }
+        .track-item { padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; text-align: center; min-width: 70px;}
+        .track-past { background: #1a1a1a; color: #777; border: 1px solid #333; }
+        .track-live { background: #002233; color: #fff; border: 2px solid #34b4ff; box-shadow: 0 0 15px #34b4ff; transform: scale(1.1); z-index: 10; }
+        .track-live span { display: block; font-size: 10px; color: #a3d9ff; font-weight: normal; margin-bottom: 2px; text-transform: uppercase;}
+        .track-next { background: #332200; color: #ffb400; border: 1px dashed #ffb400; }
+        .track-next span { display: block; font-size: 10px; color: #ffb400; font-weight: normal; margin-bottom: 2px; }
+
+        /* 🌟 Sequence Grid Styles */
+        .seq-container { background: #000; padding: 12px; border-radius: 5px; border: 1px solid #444; max-height: 300px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;}
+        .seq-box { background: #222; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: bold; border: 1px solid #555; transition: 0.2s; cursor: pointer; text-align: center; }
+        .seq-box:hover { background: #444; }
+        .seq-box.high-x { color: #ffb400; border-color: #ffb400; }
+        .seq-box.jackpot { background: #ff33ff; color: #fff; border-color: #ff33ff; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #333; font-size: 14px; }
+        th { background: #111; color: #ffb400; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <!-- Arrow ko group kar diya hai title k sath -->
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <h3 style="margin: 0; color: #ffb400;"><i class="fas fa-shield-alt"></i> ADMIN PANEL</h3>
+    </div>
+    
+    <div class="search-box">
+        <i class="fas fa-search" style="color: #ffb400; margin-right: 8px;"></i>
+        <input type="text" id="searchUser" placeholder="Search User Phone..." onkeyup="window.filterUsers()">
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="header-title"><i class="fas fa-space-shuttle"></i> FLY X - MASTER CONTROL</h1>
+
+    <!-- 🔴 LIVE SHOW BOX -->
+    <div class="live-section">
+        <div class="server-badge" id="serverBadge"><i class="fas fa-server"></i> Admin Server Active</div>
+        <h3><i class="fas fa-satellite-dish" style="color:var(--green)"></i> Live Game Multiplier</h3>
+        <div id="livePlaneStatus">WAITING...</div>
+        <button class="btn btn-red" style="padding: 15px; font-size: 18px; border-radius: 10px; margin-bottom: 10px; max-width: 400px; margin-left: auto; margin-right: auto;" onclick="window.setAndCrash()">
+            <i class="fas fa-bolt"></i> FORCE CRASH INSTANTLY!
+        </button>
+        
+        <button class="btn btn-purple" id="serverToggleBtn" style="margin-top: 15px; max-width: 400px;" onclick="window.toggleAdminServer()">
+            <i class="fas fa-power-off"></i> Auto-Play Background Engine (Without Game App)
+        </button>
+    </div>
+
+    <div class="grid">
+        <!-- 🔵 TARGET CONTROL -->
+        <div class="card" style="border-color: #34b4ff;">
+            <h2><span>🎯 1-Time Override Target</span></h2>
+            <div class="status-box" style="border-color: #34b4ff;">
+                <div>Active Override: <span id="activeNextCrash" style="color:var(--green);">None</span></div>
+            </div>
+            <label>Set Next 1 Round Only</label>
+            <input type="number" id="nextCrash" step="0.01" placeholder="Minimum 1.01">
+            <div class="quick-btns">
+                <button onclick="document.getElementById('nextCrash').value=1.01">1.01x</button>
+                <button onclick="document.getElementById('nextCrash').value=2.00">2.00x</button>
+                <button onclick="document.getElementById('nextCrash').value=10.00">10.0x</button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-blue btn-half" onclick="window.setNextRound()"><i class="fas fa-check"></i> Set</button>
+                <button class="btn btn-red btn-half" onclick="window.resetNextRound()"><i class="fas fa-undo"></i> Clear</button>
+            </div>
+        </div>
+
+        <!-- 🟡 SMART GENERATOR -->
+        <div class="card" style="border-color: #ffb400;">
+            <h2><span>📋 Sequence Generator & Editor</span></h2>
+            
+            <!-- NEW: LIVE TRACK BOX -->
+            <label>Real-Time Tracking (Past, Live & Next)</label>
+            <div class="live-track-box" id="liveTrackBox">
+                <!-- Dynamically filled by JavaScript -->
+            </div>
+
+            <div class="status-box" style="border-color: #ffb400;">
+                <div>Remaining Sequence: <span id="activeSeqLength" style="color:#ffb400">0</span></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div style="width: 50%;"><label>Total Rounds</label><input type="number" id="totalRounds" value="5000"></div>
+                <div style="width: 50%;"><label>Max Limit</label><input type="number" id="maxLimit" value="500"></div>
+            </div>
+            <label>Visible Boxes in Table</label>
+            <input type="number" id="visibleBoxes" value="100" onchange="window.forceRenderGrid()">
+
+            <button class="btn btn-green" onclick="window.generateSequence()"><i class="fas fa-magic"></i> Generate Realistic Mix</button>
+            <p style="color: #aaa; font-size: 12px; text-align:center;">Click any active box to Edit without restarting game.</p>
+            
+            <!-- GRID -->
+            <div class="seq-container" id="sequenceGrid">
+                <span style='color:gray; padding:10px;'>Fetching data...</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" id="saveBtn" style="display:none;" onclick="window.saveSequence()"><i class="fas fa-save"></i> Save Table</button>
+                <button class="btn btn-red" onclick="window.clearSequence()"><i class="fas fa-trash"></i> Delete Table</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👥 USERS TABLE -->
+    <div class="card" style="border: 1px solid #11aa11;">
+        <h2><span>👥 Live Players Data</span> <span style="font-size: 14px; color: white;">Total Accounts: <b id="totalUsers" style="color: #ffb400;">0</b></span></h2>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead><tr><th>User Phone No.</th><th>Available Balance</th><th>Action</th></tr></thead>
+                <tbody id="userTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260", authDomain: "eagle-trading-81262.firebaseapp.com", databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com", projectId: "eagle-trading-81262", storageBucket: "eagle-trading-81262.firebasestorage.app", messagingSenderId: "996540768145", appId: "1:996540768145:web:76304ad1ffe78d45780430" };
+    const app = initializeApp(firebaseConfig); const db = getDatabase(app);
+
+    window.currentDraftSequence = []; window.liveSequence = []; window.globalHistoryData = [];
+    let isDraftMode = false; let currentGameState = "WAITING"; let currentFlyMulti = "1.00"; let engineRunning = false;
+
+    // --- LIVE PLANE SYNC ---
+    onValue(ref(db, 'game_sync_flyx/live_status'), snap => {
+        if(snap.exists()) {
+            const data = snap.val(); 
+            currentGameState = data.state; 
+            currentFlyMulti = data.x;
+            const display = document.getElementById('livePlaneStatus');
+            
+            if(data.state === 'WAITING' || data.state === 'DROPPING') {
+                display.innerText = "WAITING..."; display.style.color = "#fff"; display.style.textShadow = "0 0 10px #fff";
+            } else if (data.state === 'FLYING') {
+                display.innerText = data.x + "x"; display.style.color = "var(--green)"; display.style.textShadow = "0 0 20px var(--green)";
+            } else if (data.state === 'CRASHED') {
+                display.innerText = "CRASHED @ " + data.x + "x"; display.style.color = "var(--red)"; display.style.textShadow = "0 0 20px var(--red)";
+            }
+            updateLiveTrackBox();
+        }
+    });
+
+    // --- SEQUENCE SYNC ---
+    onValue(ref(db, 'admin_settings/flyx_control'), snap => {
+        if(snap.exists()) {
+            const data = snap.val();
+            document.getElementById('activeNextCrash').innerText = data.nextCrash > 1 ? data.nextCrash + "x" : "None";
+            let seq = data.crashSequence || []; if(!Array.isArray(seq)) seq = Object.values(seq);
+            window.liveSequence = seq; document.getElementById('activeSeqLength').innerText = seq.length;
+            if(!isDraftMode) renderGrid(window.liveSequence, false);
+            updateLiveTrackBox();
+        }
+    });
+
+    // --- HISTORY SYNC ---
+    onValue(ref(db, 'game_sync_flyx/global_history'), snap => {
+        const hist = snap.val() || []; window.globalHistoryData = hist;
+        updateLiveTrackBox();
+    });
+
+    // --- TRACK BOX UPDATER (Past 3 + Live + Next) ---
+    function updateLiveTrackBox() {
+        const trackBox = document.getElementById('liveTrackBox');
+        trackBox.innerHTML = "";
+
+        // 1. Show Past 3 Rounds (Grey)
+        let last3 = window.globalHistoryData.slice(-3);
+        last3.forEach(val => {
+            trackBox.innerHTML += `<div class="track-item track-past">${parseFloat(val).toFixed(2)}x</div>`;
+        });
+
+        // 2. Show Live / Playing Round (Blue)
+        if(currentGameState === "FLYING" || currentGameState === "WAITING" || currentGameState === "DROPPING") {
+            let label = currentGameState === "FLYING" ? "LIVE" : "WAITING";
+            let multi = currentGameState === "FLYING" ? currentFlyMulti + "x" : "...";
+            trackBox.innerHTML += `<div class="track-item track-live"><span>${label}</span>${multi}</div>`;
+        }
+
+        // 3. Show Next Round in Queue (Yellow)
+        if(window.liveSequence.length > 0) {
+            let nextVal = window.liveSequence[0];
+            trackBox.innerHTML += `<div class="track-item track-next"><span>QUEUE</span>${nextVal}x</div>`;
+        } else {
+            trackBox.innerHTML += `<div class="track-item track-next" style="border-color:#555; color:#555;"><span>QUEUE</span>Auto</div>`;
+        }
+    }
+
+    // --- OVERRIDE BUTTONS ---
+    window.setNextRound = () => {
+        let val = parseFloat(document.getElementById('nextCrash').value);
+        if(!val || val < 1.01) return alert("Minimum multiplier is 1.01x");
+        update(ref(db, 'admin_settings/flyx_control'), { nextCrash: val, emergencyCrash: false });
+    };
+    window.resetNextRound = () => update(ref(db, 'admin_settings/flyx_control'), { nextCrash: 0 });
+    window.setAndCrash = () => {
+        update(ref(db, 'admin_settings/flyx_control'), { emergencyCrash: true });
+        setTimeout(() => update(ref(db, 'admin_settings/flyx_control/emergencyCrash'), false), 2000);
+    };
+
+    // --- 🌟 REALISTIC MIX GENERATOR (50/50 Balance) ---
+    window.generateSequence = () => {
+        let max = parseFloat(document.getElementById('maxLimit').value) || 500;
+        let total = parseInt(document.getElementById('totalRounds').value) || 5000;
+        let seq = []; 
+        
+        for(let i=0; i<total; i++) {
+            let multi;
+            let rand = Math.random();
+            
+            // New Perfect Balance Math (Mix)
+            if (rand < 0.45) { 
+                // 45% Chance: Below 2.00x (1.01x to 1.99x)
+                multi = 1.01 + Math.random() * 0.98; 
+            } else if (rand < 0.75) { 
+                // 30% Chance: Medium (2.00x to 5.00x)
+                multi = 2.00 + Math.random() * 3.00; 
+            } else if (rand < 0.92) { 
+                // 17% Chance: High (5.01x to 20.00x)
+                multi = 5.01 + Math.random() * 14.99; 
+            } else { 
+                // 8% Chance: Jackpots (20.01x up to Max)
+                multi = 20.01 + Math.random() * (max - 20.01); 
+            }
+            
+            if(multi > max) multi = max; if(multi < 1.01) multi = 1.01; 
+            seq.push(parseFloat(multi.toFixed(2)));
+        }
+        window.currentDraftSequence = seq; isDraftMode = true;
+        renderGrid(window.currentDraftSequence, true); 
+        document.getElementById('saveBtn').style.display = 'inline-block';
+    };
+
+    window.forceRenderGrid = () => { if(isDraftMode) renderGrid(window.currentDraftSequence, true); else renderGrid(window.liveSequence, false); }
+
+    // --- TABLE GRID RENDERER ---
+    function renderGrid(array, isDraft) {
+        const grid = document.getElementById('sequenceGrid'); grid.innerHTML = "";
+        if(array.length === 0) { grid.innerHTML = "<span style='color:gray; padding:10px;'>No sequence active.</span>"; return; }
+
+        let displayLimit = parseInt(document.getElementById('visibleBoxes').value) || 100;
+        let preview = array.slice(0, displayLimit);
+
+        preview.forEach((val, index) => {
+            let box = document.createElement('div');
+            box.className = 'seq-box'; box.id = "box-" + index;
+            if(val >= 50) box.classList.add('jackpot'); else if(val >= 10) box.classList.add('high-x');
+            box.innerText = val + "x";
+
+            // Live Edit System
+            box.onclick = () => {
+                let newVal = prompt(`Edit Round (Current: ${val}x) :\nMinimum value is 1.01`, val);
+                let parsed = parseFloat(newVal);
+                if(!isNaN(parsed) && parsed >= 1.01) {
+                    if(isDraft) { window.currentDraftSequence[index] = parsed.toFixed(2) * 1; renderGrid(window.currentDraftSequence, true); } 
+                    else { window.liveSequence[index] = parsed.toFixed(2) * 1; update(ref(db, 'admin_settings/flyx_control'), { crashSequence: window.liveSequence }); }
+                }
+            };
+            grid.appendChild(box);
+        });
+
+        if(array.length > displayLimit) {
+            let ext = document.createElement('div'); ext.style = "color:#ffb400; width:100%; text-align:center; padding:10px; font-weight:bold;";
+            ext.innerText = `...and ${array.length - displayLimit} more rounds hidden.`; grid.appendChild(ext);
+        }
+    }
+
+    window.saveSequence = () => {
+        if(window.currentDraftSequence.length === 0) return;
+        update(ref(db, 'admin_settings/flyx_control'), { crashSequence: window.currentDraftSequence }).then(() => {
+            isDraftMode = false; document.getElementById('saveBtn').style.display = 'none'; alert("Table Saved & Live!");
+        });
+    };
+
+    window.clearSequence = () => {
+        if(confirm("Delete the sequence?")) { window.currentDraftSequence = []; isDraftMode = false; document.getElementById('saveBtn').style.display = 'none'; update(ref(db, 'admin_settings/flyx_control'), { crashSequence: [] }); }
+    };
+
+    // --- ADMIN BACKGROUND SERVER ENGINE ---
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    window.toggleAdminServer = async () => {
+        engineRunning = !engineRunning; let btn = document.getElementById('serverToggleBtn'); let badge = document.getElementById('serverBadge');
+        if(engineRunning) {
+            btn.className = "btn btn-red"; btn.innerHTML = `<i class="fas fa-stop"></i> Stop Background Engine`; badge.style.display = "block";
+            runHeadlessGameLoop();
+        } else {
+            btn.className = "btn btn-purple"; btn.innerHTML = `<i class="fas fa-power-off"></i> Auto-Play Background Engine`; badge.style.display = "none";
+        }
+    }
+
+    async function runHeadlessGameLoop() {
+        while(engineRunning) {
+            set(ref(db, 'game_sync_flyx/live_status'), { state: 'WAITING', x: "1.00" });
+            
+            // Wait Time & Setup
+            await sleep(10000); if(!engineRunning) break;
+            
+            let crashPoint = window.liveSequence.length > 0 ? window.liveSequence[0] : (1.10 + Math.random() * 2); let multi = 1.00;
+            let adminOverride = parseFloat(document.getElementById('activeNextCrash').innerText);
+            if(adminOverride && !isNaN(adminOverride)) { crashPoint = adminOverride; set(ref(db, 'admin_settings/flyx_control/nextCrash'), 0); }
+            
+            // Shift the array at the start just like the real game does
+            if (window.liveSequence.length > 0) {
+                window.liveSequence.shift();
+                update(ref(db, 'admin_settings/flyx_control'), { crashSequence: window.liveSequence });
+            }
+
+            set(ref(db, 'game_sync_flyx/live_status'), { state: 'FLYING', x: "1.00" });
+
+            // Flying Time
+            while (multi < crashPoint && engineRunning) {
+                let snap = await get(ref(db, 'admin_settings/flyx_control/emergencyCrash'));
+                if(snap.exists() && snap.val() === true) { crashPoint = multi; set(ref(db, 'admin_settings/flyx_control/emergencyCrash'), false); }
+                multi += multi < 3.0 ? 0.05 : (multi < 10.0 ? 0.15 : 0.40);
+                if (multi > crashPoint) multi = crashPoint;
+                set(ref(db, 'game_sync_flyx/live_status'), { state: 'FLYING', x: multi.toFixed(2) });
+                await sleep(150);
+            }
+            if(!engineRunning) break;
+            
+            // Crash State
+            set(ref(db, 'game_sync_flyx/live_status'), { state: 'CRASHED', x: crashPoint.toFixed(2) });
+
+            // Push History
+            let histSnap = await get(ref(db, 'game_sync_flyx/global_history')); let hist = histSnap.val() || [];
+            hist.push(crashPoint); if(hist.length > 20) hist.shift();
+            set(ref(db, 'game_sync_flyx/global_history'), hist);
+
+            await sleep(4000);
+        }
+    }
+
+    // --- USERS MANAGEMENT ---
+    let allUsersData = {};
+    onValue(ref(db, 'users'), snap => { allUsersData = snap.val() || {}; renderUsers(allUsersData); });
+    
+    window.filterUsers = () => {
+        const query = document.getElementById('searchUser').value.toLowerCase();
+        let filtered = {};
+        for(let phone in allUsersData) if(phone.toLowerCase().includes(query)) filtered[phone] = allUsersData[phone];
+        renderUsers(filtered);
+    };
+
+    function renderUsers(usersObj) {
+        const table = document.getElementById('userTable'); table.innerHTML = ""; let count = 0;
+        for (let phone in usersObj) {
+            count++;
+            table.innerHTML += `<tr><td style="font-family: monospace; font-size: 15px;">${phone}</td><td style="color: var(--green); font-weight: bold; font-size: 15px;">${parseFloat(usersObj[phone].balance || 0).toFixed(2)} PKR</td><td><button class="btn" style="padding: 8px; width: 80px; margin:0;" onclick="alert('Balance: ${parseFloat(usersObj[phone].balance || 0).toFixed(2)}\\nTotal Bet: ${parseFloat(usersObj[phone].totalBet || 0).toFixed(2)}')"><i class="fas fa-eye"></i> View</button></td></tr>`;
+        }
+        document.getElementById('totalUsers').innerText = count;
+    }
+</script>
+</body>
+</html>

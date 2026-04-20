@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aviator VIP - Pro Admin Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --bg: #070b14; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; --panel: rgba(0, 31, 24, 0.85); }
+        * { box-sizing: border-box; outline: none; }
+        
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), #070b14; 
+            color: white; font-family: 'Segoe UI', Tahoma, sans-serif; 
+            margin: 0; padding: 0; padding-bottom: 20px; 
+            touch-action: pan-y; 
+        }
+
+        .top-bar { background: rgba(0, 21, 16, 0.95); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .back-btn { color: var(--gold); font-size: 22px; text-decoration: none; transition: 0.2s; }
+        
+        .search-box { display: flex; align-items: center; background: #000; border: 1px solid var(--gold); border-radius: 5px; padding: 5px 15px; width: 300px; }
+        .search-box input { border: none; background: transparent; margin: 0; padding: 5px; width: 100%; color: white; font-size: 16px; }
+        
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .header-title { text-align: center; color: var(--gold); margin-top: 10px; margin-bottom: 25px; font-size: 24px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); border-bottom: 1px dashed var(--gold); padding-bottom: 10px; }
+        
+        /* 🔵 AUTO / MANUAL SYSTEM MODE SWITCH */
+        .system-mode-card { background: var(--panel); border: 2px solid var(--gold); border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .mode-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .mode-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.3s; background: #001F18; color: #aaa; }
+        .mode-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        
+        /* 🔴 MANUAL SECTION */
+        .manual-section { display: none; background: rgba(0, 0, 0, 0.9); border: 2px solid var(--blue); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 0 20px rgba(52, 152, 219, 0.2); }
+        .manual-section h3 { margin: 0 0 15px 0; color: var(--blue); font-size: 18px; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 10px;}
+        
+        .card { background: var(--panel); padding: 20px; border-radius: 15px; border: 1px solid #004D40; box-shadow: 0 8px 20px rgba(0,0,0,0.5); margin-bottom: 25px;}
+        h2 { color: #00d2ff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.2rem; margin-top: 0; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #000; border: 1px solid var(--gold); color: white; border-radius: 5px; font-size: 14px; font-weight: bold; }
+        label { color: var(--gold); font-size: 13px; font-weight: bold; }
+
+        .btn { border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; }
+        .btn:active { transform: scale(0.97); }
+        .btn-gold { background: var(--gold); color: black; }
+        .btn-red { background: var(--red); color: white; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-green { background: var(--green); color: black; }
+        .btn-purple { background: #9b59b6; color: white; }
+
+        /* 👥 USERS TABLE WITH LIVE TRACKER */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; }
+        th, td { text-align: center; padding: 12px 8px; border-bottom: 1px solid #333; font-size: 14px; vertical-align: middle;}
+        th { background: #001F18; color: var(--gold); font-size: 12px; text-transform: uppercase;}
+        tr:hover td { background: rgba(255, 215, 0, 0.1); }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-active { background: rgba(46, 204, 113, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .status-online { background: rgba(52, 152, 219, 0.2); color: var(--blue); border: 1px solid var(--blue); }
+        .status-offline { background: rgba(231, 76, 60, 0.2); color: var(--red); border: 1px solid var(--red); }
+        
+        .live-cell { font-family: monospace; font-size: 16px; font-weight: bold; }
+        .live-waiting { color: #888; font-size: 12px; }
+        .live-flying { color: var(--green); text-shadow: 0 0 5px var(--green); }
+        .live-crashed { color: var(--red); }
+
+        /* 🎛️ INDIVIDUAL USER MODAL */
+        #userModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; overflow-y: auto; z-index: 1000; backdrop-filter: blur(5px);}
+        .modal-content { max-width: 600px; margin: 20px auto; background: #001510; padding: 20px; border-radius: 15px; border: 2px solid var(--gold); }
+        .close-modal { float:right; color:var(--red); border:none; background:none; font-size:25px; cursor: pointer; }
+        
+        .pending-box { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 5px; font-family: monospace; font-size: 14px; color: #fff; margin-top: 5px; display: inline-block; width: 100%; word-break: break-all; max-height: 100px; overflow-y: auto;}
+
+        /* PERCENTAGE INPUT GRID */
+        .pct-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .pct-box { background: #000; padding: 10px; border-radius: 5px; border: 1px solid #333; text-align: center; }
+        .pct-box input { margin: 5px 0 0 0; text-align: center; font-size: 16px; color: var(--gold); }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="#" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h3 style="margin: 0; color: var(--gold);"><i class="fas fa-shield-alt"></i> SYSTEM CORE</h3>
+        </div>
+        <div class="search-box">
+            <i class="fas fa-search" style="color: var(--gold); margin-right: 8px;"></i>
+            <input type="text" id="searchUser" placeholder="Search Phone..." onkeyup="window.filterUsers()">
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="header-title"><i class="fas fa-plane"></i> VIP MASTER ADMIN PANEL</h1>
+
+        <!-- 🔵 SYSTEM MODE SWITCH -->
+        <div class="system-mode-card">
+            <h2 style="color: var(--gold); margin:0; border:none; text-align:center;"><i class="fas fa-cogs"></i> GLOBAL OPERATION MODE</h2>
+            <div class="mode-buttons">
+                <button class="mode-btn active" id="btnAuto" onclick="window.setMode('AUTO')">
+                    <i class="fas fa-robot"></i> AUTO MODE
+                </button>
+                <button class="mode-btn" id="btnManual" onclick="window.setMode('MANUAL')">
+                    <i class="fas fa-hand-paper"></i> MANUAL MODE
+                </button>
+            </div>
+        </div>
+
+        <!-- 🔴 MANUAL SECTION (GLOBAL SETTINGS) -->
+        <div class="manual-section" id="manualSection">
+            <h3 style="color: var(--gold);"><i class="fas fa-globe"></i> GLOBAL ROUNDS GENERATOR (ALL USERS)</h3>
+            
+            <div style="background: rgba(155, 89, 182, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #9b59b6; margin-bottom: 20px;">
+                <label style="color: #9b59b6;"><i class="fas fa-magic"></i> Auto-Generate Sequence For Everyone</label>
+                <p style="font-size: 12px; color: #aaa; margin: 5px 0 10px;">Select percentage chances and generate rounds. Ye sabhi users par apply hoga.</p>
+                
+                <label>Total Rounds to Generate:</label>
+                <input type="number" id="g_gen_total" value="50">
+                
+                <div class="pct-grid">
+                    <div class="pct-box">
+                        <label style="font-size:11px;">Under 2.0x (%)</label>
+                        <input type="number" id="g_gen_p1" value="60">
+                    </div>
+                    <div class="pct-box">
+                        <label style="font-size:11px;">2.0x to 5.0x (%)</label>
+                        <input type="number" id="g_gen_p2" value="30">
+                    </div>
+                    <div class="pct-box">
+                        <label style="font-size:11px;">Over 5.0x (%)</label>
+                        <input type="number" id="g_gen_p3" value="10">
+                    </div>
+                </div>
+                
+                <button class="btn btn-purple" onclick="window.autoGenerateRounds(null)">
+                    <i class="fas fa-cogs"></i> GENERATE & APPLY TO ALL USERS
+                </button>
+            </div>
+        </div>
+
+        <!-- 👥 USERS TABLE (ALWAYS VISIBLE LIVE TRACKER) -->
+        <div class="card">
+            <h2><span><i class="fas fa-users"></i> Live Monitoring & Instant Actions</span></h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">User Phone</th>
+                            <th>Status</th>
+                            <th>Live Bet</th>
+                            <th>Jahaz (Live)</th>
+                            <th>P/L</th>
+                            <th style="width: 180px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable">
+                        <tr><td colspan="6" style="text-align: center;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎛️ INDIVIDUAL USER SETUP MODAL -->
+    <div id="userModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="window.closeModal()"><i class="fas fa-times-circle"></i></button>
+            <h2 style="color: var(--gold); margin-bottom: 5px;"><i class="fas fa-user-cog"></i> Setup: <span id="m_phone">0000</span></h2>
+            <hr style="border: 1px solid #333; margin-bottom: 20px;">
+
+            <!-- Financials -->
+            <div style="display:flex; justify-content:space-between; background:#000; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #333;">
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#888;">Deposit</div>
+                    <div style="font-weight:bold; color:#fff;" id="m_dep">0</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#888;">Admin P/L</div>
+                    <div style="font-weight:bold;" id="m_pl">0</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#888;">Balance</div>
+                    <div style="font-weight:bold; color:var(--gold);" id="m_bal">0</div>
+                </div>
+            </div>
+
+            <!-- 🚀 AUTO GENERATOR TOOL FOR INDIVIDUAL -->
+            <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--blue); margin-bottom: 15px;">
+                <label style="color:var(--blue);"><i class="fas fa-magic"></i> Auto-Generate Rounds List</label>
+                <p style="font-size: 11px; color: #aaa; margin: 5px 0 10px;">Set percentages below and automatically generate 50+ rounds.</p>
+                
+                <label style="font-size: 11px;">Total Rounds:</label>
+                <input type="number" id="m_gen_total" value="50" style="padding: 8px; margin: 0 0 10px 0;">
+                
+                <div class="pct-grid">
+                    <div class="pct-box">
+                        <label style="font-size:11px;">Under 2.0x (%)</label>
+                        <input type="number" id="m_gen_p1" value="60">
+                    </div>
+                    <div class="pct-box">
+                        <label style="font-size:11px;">2.0x - 5.0x (%)</label>
+                        <input type="number" id="m_gen_p2" value="30">
+                    </div>
+                    <div class="pct-box">
+                        <label style="font-size:11px;">Over 5.0x (%)</label>
+                        <input type="number" id="m_gen_p3" value="10">
+                    </div>
+                </div>
+                
+                <button class="btn btn-blue" onclick="window.autoGenerateRounds(activeModalUser)">
+                    <i class="fas fa-bolt"></i> GENERATE & SAVE
+                </button>
+            </div>
+            
+            <!-- 🚀 MANUAL SEQUENCE ENTRY (BACKUP) -->
+            <div style="background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--green);">
+                <label style="color:var(--green);"><i class="fas fa-pen"></i> Manual Rounds Entry (Optional)</label>
+                <input type="text" id="m_sequence" placeholder="Example: 1.2, 5.0, 1.1">
+                <button class="btn btn-green" onclick="window.setUserSequence()">SAVE MANUAL ROUNDS</button>
+                
+                <div style="margin-top: 15px;">
+                    <span style="color:#aaa; font-size:12px;">Pending Generated Rounds:</span>
+                    <button class="btn btn-red" style="padding:4px 8px; width:auto; font-size:10px; margin:0; float:right;" onclick="window.clearUserSequence()">Clear Data</button>
+                    <div id="m_pending_rounds" class="pending-box">None</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyCT3CNXv4UqzMHqNYGMev8gFWIB3X_b260", authDomain: "eagle-trading-81262.firebaseapp.com", databaseURL: "https://eagle-trading-81262-default-rtdb.firebaseio.com", projectId: "eagle-trading-81262", storageBucket: "eagle-trading-81262.firebasestorage.app", messagingSenderId: "996540768145", appId: "1:996540768145:web:76304ad1ffe78d45780430" };
+    const app = initializeApp(firebaseConfig); const db = getDatabase(app);
+
+    let allUsersData = {};
+    window.activeModalUser = null;
+
+    // --- 1. SYSTEM MODE LOGIC ---
+    onValue(ref(db, 'admin_settings/master/mode'), snap => {
+        let mode = snap.exists() ? snap.val() : 'AUTO';
+        if(mode === 'AUTO') {
+            document.getElementById('btnAuto').className = "mode-btn active";
+            document.getElementById('btnManual').className = "mode-btn";
+            document.getElementById('manualSection').style.display = "none";
+        } else {
+            document.getElementById('btnManual').className = "mode-btn active";
+            document.getElementById('btnAuto').className = "mode-btn";
+            document.getElementById('manualSection').style.display = "block";
+        }
+    });
+
+    window.setMode = (mode) => { update(ref(db, 'admin_settings/master'), { mode: mode }); };
+
+    // --- 2. INSTANT CRASH FOR INDIVIDUAL USER ---
+    window.instantCrashUser = (phone) => {
+        // Sets instantKill to true which game loop reads immediately
+        update(ref(db, `users/${phone}/admin_control`), { instantKill: true })
+            .catch(err => alert("Error: " + err.message));
+        
+        let btn = document.getElementById('crash-btn-' + phone);
+        if(btn) {
+            btn.innerHTML = "<i class='fas fa-bolt'></i> CRASHED!"; btn.style.background = "#e67e22";
+            setTimeout(() => { btn.innerHTML = "<i class='fas fa-bomb'></i> CRASH"; btn.style.background = "var(--red)"; }, 1000);
+        }
+    };
+
+    // --- 3. USERS TABLE WITH SMART SORTING ---
+    onValue(ref(db, 'users'), snap => { 
+        allUsersData = snap.val() || {}; 
+        window.filterUsers(); 
+        if(window.activeModalUser && allUsersData[window.activeModalUser]) {
+            updateModalLiveRounds(allUsersData[window.activeModalUser]);
+        }
+    });
+
+    window.filterUsers = () => {
+        const query = document.getElementById('searchUser').value.toLowerCase();
+        const table = document.getElementById('userTable'); table.innerHTML = ""; 
+        let currentTime = Date.now();
+
+        // SMART SORTING: Active Bet Wala Sab Se Upar -> Phir Online -> Phir Offline
+        let usersArray = Object.entries(allUsersData).map(([phone, data]) => ({phone, ...data}));
+        usersArray.sort((a, b) => {
+            let aScore = (parseFloat(a.activeBet || 0) > 0) ? 3 : (a.status === 'Active' ? 2 : (a.status === 'Online' ? 1 : 0));
+            let bScore = (parseFloat(b.activeBet || 0) > 0) ? 3 : (b.status === 'Active' ? 2 : (b.status === 'Online' ? 1 : 0));
+            return bScore - aScore;
+        });
+
+        let count = 0;
+        for (let u of usersArray) {
+            let phone = u.phone;
+            let showUser = false; let statusText = ""; let statusClass = "";
+
+            if(u.status === 'Active') { showUser = true; statusText = "Active"; statusClass = "status-active"; }
+            else if (u.status === 'Online') { showUser = true; statusText = "Online"; statusClass = "status-online"; }
+            else { 
+                let lastSeen = u.lastSeen || 0;
+                if((currentTime - lastSeen) <= 600000) { showUser = true; statusText = "Offline"; statusClass = "status-offline"; }
+            }
+
+            if(showUser && phone.toLowerCase().includes(query)) {
+                count++;
+                
+                // LIVE BET COLUMN
+                let liveBetAmt = parseFloat(u.activeBet || 0).toFixed(2);
+                let betHTML = liveBetAmt > 0 ? `<span style="color:var(--gold); font-weight:bold; font-size:15px;">Rs ${liveBetAmt}</span>` : `<span style="color:#555;">0.00</span>`;
+
+                // LIVE FLIGHT COLUMN
+                let liveHTML = "";
+                if(u.livePlaneState === 'FLYING') liveHTML = `<span class="live-cell live-flying">${(u.livePlaneMulti || 1.00).toFixed(2)}x <i class="fas fa-plane"></i></span>`;
+                else if(u.livePlaneState === 'CRASHED') liveHTML = `<span class="live-cell live-crashed">${(u.livePlaneMulti || 1.00).toFixed(2)}x 💥</span>`;
+                else liveHTML = `<span class="live-cell live-waiting">Waiting...</span>`;
+
+                let adminProfit = (parseFloat(u.totalLoss || 0) - parseFloat(u.totalWin || 0)).toFixed(2);
+                let pColor = adminProfit >= 0 ? "var(--green)" : "var(--red)";
+
+                table.innerHTML += `
+                    <tr>
+                        <td style="text-align: left; font-family: monospace; font-size: 14px; font-weight:bold;">${phone}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${betHTML}</td>
+                        <td>${liveHTML}</td>
+                        <td style="color:${pColor}; font-weight:bold;">${adminProfit}</td>
+                        <td>
+                            <div style="display:flex; gap:5px; justify-content:center;">
+                                <button id="crash-btn-${phone}" class="btn btn-red" style="padding: 6px 10px; margin:0; flex: 1.5; font-size:12px;" onclick="window.instantCrashUser('${phone}')">
+                                    <i class="fas fa-bomb"></i> CRASH
+                                </button>
+                                <button class="btn btn-blue" style="padding: 6px 10px; margin:0; flex: 1; font-size:12px;" onclick="window.openModal('${phone}')">
+                                    <i class="fas fa-cog"></i> SETUP
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        if(count === 0) table.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No active users found.</td></tr>";
+    };
+
+    // --- 4. INDIVIDUAL USER MODAL ---
+    window.openModal = (phone) => {
+        window.activeModalUser = phone;
+        document.getElementById('m_phone').innerText = phone;
+        let u = allUsersData[phone] || {};
+        
+        document.getElementById('m_dep').innerText = parseFloat(u.totalDeposit || 0).toFixed(2);
+        document.getElementById('m_bal').innerText = parseFloat(u.balance || 0).toFixed(2);
+        
+        let adminProfit = (parseFloat(u.totalLoss || 0) - parseFloat(u.totalWin || 0)).toFixed(2);
+        let plEl = document.getElementById('m_pl');
+        plEl.innerText = adminProfit; plEl.style.color = adminProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+        document.getElementById('m_sequence').value = ""; 
+        updateModalLiveRounds(u);
+
+        document.getElementById('userModal').style.display = 'block';
+    };
+
+    function updateModalLiveRounds(userData) {
+        let seq = (userData.admin_control && userData.admin_control.personalSequence) ? userData.admin_control.personalSequence : [];
+        if(seq.length > 0) {
+            document.getElementById('m_pending_rounds').innerText = seq.map(v => parseFloat(v).toFixed(2) + "x").join(" ➔ ");
+            document.getElementById('m_pending_rounds').style.color = "var(--gold)";
+        } else {
+            document.getElementById('m_pending_rounds').innerText = "No rounds pending. Normal limits applied.";
+            document.getElementById('m_pending_rounds').style.color = "#888";
+        }
+    }
+
+    window.closeModal = () => { window.activeModalUser = null; document.getElementById('userModal').style.display = 'none'; };
+
+    // --- 5. AUTO GENERATOR LOGIC (BASED ON PERCENTAGE) ---
+    window.autoGenerateRounds = (targetPhone = null) => {
+        let prefix = targetPhone ? 'm_gen_' : 'g_gen_';
+        let total = parseInt(document.getElementById(prefix + 'total').value) || 50;
+        let p1 = parseInt(document.getElementById(prefix + 'p1').value) || 60;
+        let p2 = parseInt(document.getElementById(prefix + 'p2').value) || 30;
+        let p3 = parseInt(document.getElementById(prefix + 'p3').value) || 10;
+
+        if ((p1 + p2 + p3) !== 100) return alert("Total percentage must equal exactly 100%!");
+
+        let count1 = Math.round((p1 / 100) * total);
+        let count2 = Math.round((p2 / 100) * total);
+        let count3 = total - count1 - count2; // Adjusts leftover precisely
+
+        let rounds = [];
+        // Under 2.0x
+        for(let i=0; i<count1; i++) rounds.push(parseFloat((1.01 + Math.random() * 0.98).toFixed(2)));
+        // 2.0x to 5.0x
+        for(let i=0; i<count2; i++) rounds.push(parseFloat((2.00 + Math.random() * 2.99).toFixed(2)));
+        // Over 5.0x (Limit to 15.00 max for safety)
+        for(let i=0; i<count3; i++) rounds.push(parseFloat((5.00 + Math.random() * 10.00).toFixed(2)));
+
+        // Shuffle Array
+        rounds.sort(() => Math.random() - 0.5);
+
+        if (targetPhone) {
+            // Send to individual user
+            update(ref(db, `users/${targetPhone}/admin_control`), { personalSequence: rounds })
+                .then(() => alert(`Successfully generated & saved ${total} rounds for ${targetPhone}`));
+        } else {
+            // Send to ALL users globally
+            if(confirm(`Are you sure you want to generate & apply ${total} unique rounds to ALL active users?`)) {
+                let updates = {};
+                for(let phone in allUsersData) {
+                    // Reshuffle for each user individually so everyone's pattern looks slightly different
+                    let userRounds = [...rounds].sort(() => Math.random() - 0.5);
+                    updates[`users/${phone}/admin_control/personalSequence`] = userRounds;
+                }
+                update(ref(db), updates).then(() => alert(`Successfully applied ${total} rounds to ALL users!`));
+            }
+        }
+    };
+
+    // --- 6. MANUAL SEQUENCE ENTRY ---
+    window.setUserSequence = () => {
+        if(!window.activeModalUser) return;
+        let inputVal = document.getElementById('m_sequence').value;
+        if(!inputVal.trim()) return alert("Please enter at least one value!");
+
+        let sequenceArray = inputVal.split(',').map(val => parseFloat(val.trim())).filter(val => !isNaN(val) && val >= 1.0);
+        if(sequenceArray.length === 0) return alert("Invalid format. Use: 1.5, 2.0, 1.1");
+
+        update(ref(db, `users/${window.activeModalUser}/admin_control`), { personalSequence: sequenceArray })
+            .then(() => {
+                alert(`Successfully saved ${sequenceArray.length} rounds!`);
+                document.getElementById('m_sequence').value = ""; 
+            });
+    };
+
+    window.clearUserSequence = () => {
+        if(!window.activeModalUser) return;
+        if(confirm("Are you sure you want to delete pending rounds?")) {
+            update(ref(db, `users/${window.activeModalUser}/admin_control`), { personalSequence: null });
+        }
+    };
+
+</script>
+</body>
+</html>
